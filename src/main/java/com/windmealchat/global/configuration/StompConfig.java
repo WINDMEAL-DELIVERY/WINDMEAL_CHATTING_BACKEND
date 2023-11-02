@@ -1,10 +1,16 @@
 package com.windmealchat.global.configuration;
 
 import com.windmealchat.global.handler.ClientInboundChannelHandler;
+import com.windmealchat.global.token.dao.RefreshTokenDAO;
+import com.windmealchat.global.token.impl.RefreshTokenDAOImpl;
+import com.windmealchat.global.token.impl.TokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -13,11 +19,23 @@ import static com.windmealchat.global.constants.StompConstants.PUB;
 import static com.windmealchat.global.constants.StompConstants.SUB;
 
 @Configuration
-@EnableWebSocketMessageBroker
 @RequiredArgsConstructor
+@EnableWebSocketMessageBroker
 public class StompConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final ClientInboundChannelHandler clientInboundChannelHandler;
+    private final RedisTemplate redisTemplate;
+    private final TokenProvider tokenProvider;
+
+    @Bean
+    public RefreshTokenDAO refreshTokenDAO() {
+        return new RefreshTokenDAOImpl(redisTemplate);
+    }
+
+    @Bean
+    public ChannelInterceptor channelInterceptor() {
+        return new ClientInboundChannelHandler(tokenProvider, refreshTokenDAO());
+    }
+
     @Override
     public void configureMessageBroker(MessageBrokerRegistry messageBrokerRegistry) {
         // enableSimpleBroker는 내장 브로커를 활용하겠단 말이다.
@@ -38,6 +56,6 @@ public class StompConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(clientInboundChannelHandler);
+        registration.interceptors(channelInterceptor());
     }
 }
