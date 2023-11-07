@@ -35,7 +35,7 @@ public class TokenProvider implements InitializingBean {
      * @return MemberInfoDto (memberId, memberEmail)
      * @throws JwtException 파싱과정에서 토큰 오류가 발생하면 이를 호출한 클래스로 예외를 위임한다.
      */
-    public Optional<MemberInfoDTO> getMemberInfoFromToken(String token) {
+    public Optional<MemberInfoDTO> getMemberInfoFromToken(String token) throws JwtException{
         Long userId;
         String email;
         if(validateToken(token)) {

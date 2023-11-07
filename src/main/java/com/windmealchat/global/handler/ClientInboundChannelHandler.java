@@ -31,19 +31,23 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
      */
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
-        // TODO 반환값이 null일때 사용자에게 재로그인을 요청하거나 reissue를 요청해야 한다.
-        TokenProcessing(message);
+        // TODO 반환값이 null일때 사료용자에게 재로그인을 요청하거나 reissue를 요청해야 한다.
+        Optional<MemberInfoDTO> memberInfoDTO = TokenProcessing(message);
+
 
     }
 
     private Optional<MemberInfoDTO> TokenProcessing(Message<?> message) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         if(StompCommand.CONNECT.equals(accessor.getCommand())) {
+            // 이 세션은 HandshakeInterceptor 혹은 이를 상속받은 클래스에서 핸드쉐이크 과정 중간에 난입하여 얻은 토큰 정보 등을 저장해둔 곳이다.
             Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
             String accessToken = (String) sessionAttributes.get(TOKEN);
             /*
                 아래 코드에서 accessToken을 검증하고, 유효하다면 정보를 넣어서 반환해준다.
                 토큰 만료, 잘못된 토큰 등 유효하지 않은 토큰이라고 판단되면 null이 반환됨.
+                같은 과정을 핸드쉐이크 인터셉터에서도 수행해주는데, 그 결과인 memberInfo를 세션에 저장하지 않은 이유는
+                토큰 검증 과정에서 만료된 토큰을 찾기 위함이다.
              */
             Optional<MemberInfoDTO> memberInfoDTOOptional = tokenProvider.getMemberInfoFromToken(accessToken);
             return memberInfoDTOOptional;
