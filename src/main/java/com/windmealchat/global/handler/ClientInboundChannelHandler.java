@@ -4,6 +4,7 @@ import com.windmealchat.global.token.dao.RefreshTokenDAO;
 import com.windmealchat.global.token.impl.TokenProvider;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -17,6 +18,7 @@ import java.util.Optional;
 
 import static com.windmealchat.global.constants.TokenConstants.TOKEN;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ClientInboundChannelHandler implements ChannelInterceptor {
@@ -31,14 +33,19 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
      */
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
-        // TODO 반환값이 null일때 사료용자에게 재로그인을 요청하거나 reissue를 요청해야 한다.
+        log.error("InboundChannelHandler");
+        // TODO 반환값이 null일때 사용자에게 재로그인을 요청하거나 reissue를 요청해야 한다.
         Optional<MemberInfoDTO> memberInfoDTO = TokenProcessing(message);
-
-
+        if(memberInfoDTO.isPresent())
+            return message;
+        // null을 반환할 시 메세지 전송이 이루어지지 않는다.
+        return null;
     }
 
     private Optional<MemberInfoDTO> TokenProcessing(Message<?> message) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+        Optional<MemberInfoDTO> memberInfoDTOOptional = Optional.empty();
+        // TODO 여기서 CONNECT가 맞는지 잘 모르겠다. MESSAGE 혹은 SEND가 들어가야 할 것 같은데 관련 설명이 공식문서에 없다.
         if(StompCommand.CONNECT.equals(accessor.getCommand())) {
             // 이 세션은 HandshakeInterceptor 혹은 이를 상속받은 클래스에서 핸드쉐이크 과정 중간에 난입하여 얻은 토큰 정보 등을 저장해둔 곳이다.
             Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
@@ -49,8 +56,8 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
                 같은 과정을 핸드쉐이크 인터셉터에서도 수행해주는데, 그 결과인 memberInfo를 세션에 저장하지 않은 이유는
                 토큰 검증 과정에서 만료된 토큰을 찾기 위함이다.
              */
-            Optional<MemberInfoDTO> memberInfoDTOOptional = tokenProvider.getMemberInfoFromToken(accessToken);
-            return memberInfoDTOOptional;
+            memberInfoDTOOptional = tokenProvider.getMemberInfoFromToken(accessToken);
         }
+        return memberInfoDTOOptional;
     }
 }
