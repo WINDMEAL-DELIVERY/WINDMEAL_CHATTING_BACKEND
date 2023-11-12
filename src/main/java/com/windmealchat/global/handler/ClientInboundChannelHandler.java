@@ -35,6 +35,7 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         log.error("InboundChannelHandler");
         // TODO 반환값이 null일때 사용자에게 재로그인을 요청하거나 reissue를 요청해야 한다.
+        // TODO 사진 전송, 메세지 전송 실패 등을 식별하고 이를 클라이언트에서 조치하기 위해 메세지 타입을 둬야할 것 같다.
         Optional<MemberInfoDTO> memberInfoDTO = TokenProcessing(message);
         if(memberInfoDTO.isPresent())
             return message;
@@ -45,8 +46,10 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
     private Optional<MemberInfoDTO> TokenProcessing(Message<?> message) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         Optional<MemberInfoDTO> memberInfoDTOOptional = Optional.empty();
-        // TODO 여기서 CONNECT가 맞는지 잘 모르겠다. MESSAGE 혹은 SEND가 들어가야 할 것 같은데 관련 설명이 공식문서에 없다.
-        if(StompCommand.CONNECT.equals(accessor.getCommand())) {
+        log.error("커맨드 타입 : " + accessor.getCommand());
+        // 연결을 맺을 때는 CONNECT, 연결이 맺어진 상태에서 메세지를 보낼 때는 SEND, 연결을 끊을 때는 DISCONNECT가 들어간다.
+        // 다른 타입에 대해서는 일단은 신경쓰지 않겠다.
+        if(StompCommand.CONNECT.equals(accessor.getCommand()) || StompCommand.SEND.equals(accessor.getCommand())) {
             // 이 세션은 HandshakeInterceptor 혹은 이를 상속받은 클래스에서 핸드쉐이크 과정 중간에 난입하여 얻은 토큰 정보 등을 저장해둔 곳이다.
             Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
             String accessToken = (String) sessionAttributes.get(TOKEN);

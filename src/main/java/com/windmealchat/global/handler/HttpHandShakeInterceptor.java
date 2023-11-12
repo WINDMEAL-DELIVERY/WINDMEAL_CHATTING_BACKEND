@@ -37,7 +37,7 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
      */
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
-        log.error("handshakeInterceptor");
+        log.error("소켓 연결 수신됨");
         if(request instanceof ServletServerHttpRequest) {
             ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) request;
             HttpServletRequest servletRequest = servletServerHttpRequest.getServletRequest();
@@ -49,11 +49,14 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
                 (refreshToken이 존재여부를 확인하는 이유는 그냥 아무 값이나 prefix만 일치하면 통과가 되는 현상을 막기 위해서이다.)
              */
             if(memberInfoDTO.isPresent()) {
+                log.error("memberInfo 존재, ");
+                log.error(memberInfoDTO.get().getEmail());
                 Optional<String> refreshToken = refreshTokenDAO.getRefreshToken(memberInfoDTO.get());
                 // 이메일과 PK로 찾아온 리프레쉬 토큰이 존재함을 확인하면 연결을 맺을 수 있다.
                 if(refreshToken.isPresent()) {
                     // clientInboundChannelHandler (메세지를 송신하기 전 콜백되는 핸들러)에서 사용할 수 있도록 세션에 토큰을 저장해준다.
                     attributes.put(TOKEN, token);
+                    log.error("연결 성공");
                     return true;
                 }
             }

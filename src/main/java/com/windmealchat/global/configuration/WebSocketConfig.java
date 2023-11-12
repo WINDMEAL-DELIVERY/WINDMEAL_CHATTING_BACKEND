@@ -58,9 +58,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // 매개변수로 전달한 경로들은 메세지를 발행하는 경로이다.
 //        messageBrokerRegistry.enableSimpleBroker(QUEUE,TOPIC);
 
-        messageBrokerRegistry.enableSimpleBroker(QUEUE);
+//        messageBrokerRegistry.enableSimpleBroker(QUEUE);
+        messageBrokerRegistry.enableSimpleBroker(SUB);
         // 매개변수로 전달한 경로들은 메세지 핸들러로 라우팅되는 경로들이다.
-         messageBrokerRegistry.setApplicationDestinationPrefixes(TOPIC);
+//         messageBrokerRegistry.setApplicationDestinationPrefixes(TOPIC);
+         messageBrokerRegistry.setApplicationDestinationPrefixes(PUB);
     }
 
     @Override
