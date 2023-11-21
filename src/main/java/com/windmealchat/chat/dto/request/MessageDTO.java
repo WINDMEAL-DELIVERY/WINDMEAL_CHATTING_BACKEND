@@ -1,6 +1,7 @@
 package com.windmealchat.chat.dto.request;
 
 
+import com.windmealchat.chat.domain.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MessageDTO {
-    private String type;
+    private String chatRoomId;
+    private MessageType type;
     private String message;
 }

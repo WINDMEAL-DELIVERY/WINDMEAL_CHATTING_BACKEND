@@ -1,5 +1,6 @@
 package com.windmealchat.global.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.windmealchat.global.handler.ClientInboundChannelHandler;
 import com.windmealchat.global.handler.HttpHandShakeInterceptor;
 import com.windmealchat.global.handler.StompErrorHandler;
