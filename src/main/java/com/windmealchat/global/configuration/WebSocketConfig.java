@@ -31,6 +31,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final RedisTemplate redisTemplate;
     private final TokenProvider tokenProvider;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public RefreshTokenDAO refreshTokenDAO() {
@@ -39,7 +40,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Bean
     public ChannelInterceptor channelInterceptor() {
-        return new ClientInboundChannelHandler(tokenProvider, refreshTokenDAO());
+        return new ClientInboundChannelHandler(tokenProvider, objectMapper);
     }
 
     @Bean
