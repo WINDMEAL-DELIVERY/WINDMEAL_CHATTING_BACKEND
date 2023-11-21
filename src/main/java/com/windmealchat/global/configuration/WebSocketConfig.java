@@ -61,10 +61,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 //        messageBrokerRegistry.enableSimpleBroker(QUEUE,TOPIC);
 
 //        messageBrokerRegistry.enableSimpleBroker(QUEUE);
-        messageBrokerRegistry.enableSimpleBroker(SUB);
+        messageBrokerRegistry.enableSimpleBroker(SUB_PREFIX);
         // 매개변수로 전달한 경로들은 메세지 핸들러로 라우팅되는 경로들이다.
 //         messageBrokerRegistry.setApplicationDestinationPrefixes(TOPIC);
-         messageBrokerRegistry.setApplicationDestinationPrefixes(PUB);
+         messageBrokerRegistry.setApplicationDestinationPrefixes(PUB_PREFIX);
     }
 
     @Override
