@@ -1,5 +1,6 @@
 package com.windmealchat.global.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.windmealchat.global.handler.ClientInboundChannelHandler;
 import com.windmealchat.global.handler.HttpHandShakeInterceptor;
 import com.windmealchat.global.handler.StompErrorHandler;
@@ -30,6 +31,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final RedisTemplate redisTemplate;
     private final TokenProvider tokenProvider;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public RefreshTokenDAO refreshTokenDAO() {
@@ -38,7 +40,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Bean
     public ChannelInterceptor channelInterceptor() {
-        return new ClientInboundChannelHandler(tokenProvider, refreshTokenDAO());
+        return new ClientInboundChannelHandler(tokenProvider, objectMapper);
     }
 
     @Bean
@@ -59,10 +61,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 //        messageBrokerRegistry.enableSimpleBroker(QUEUE,TOPIC);
 
 //        messageBrokerRegistry.enableSimpleBroker(QUEUE);
-        messageBrokerRegistry.enableSimpleBroker(SUB);
+        messageBrokerRegistry.enableSimpleBroker(SUB_PREFIX);
         // 매개변수로 전달한 경로들은 메세지 핸들러로 라우팅되는 경로들이다.
 //         messageBrokerRegistry.setApplicationDestinationPrefixes(TOPIC);
-         messageBrokerRegistry.setApplicationDestinationPrefixes(PUB);
+         messageBrokerRegistry.setApplicationDestinationPrefixes(PUB_PREFIX);
     }
 
     @Override

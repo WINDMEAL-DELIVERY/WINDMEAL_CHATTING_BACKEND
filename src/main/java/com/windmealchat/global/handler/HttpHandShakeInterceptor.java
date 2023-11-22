@@ -1,15 +1,19 @@
 package com.windmealchat.global.handler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.windmealchat.chat.exception.AuthorizationException;
+import com.windmealchat.global.exception.ErrorCode;
+import com.windmealchat.global.exception.ExceptionResponseDTO;
 import com.windmealchat.global.token.dao.RefreshTokenDAO;
 import com.windmealchat.global.token.impl.TokenProvider;
 import com.windmealchat.global.util.CookieUtil;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
-import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
@@ -49,7 +53,7 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
                 (refreshToken이 존재여부를 확인하는 이유는 그냥 아무 값이나 prefix만 일치하면 통과가 되는 현상을 막기 위해서이다.)
              */
             if(memberInfoDTO.isPresent()) {
-                log.error("memberInfo 존재, ");
+                log.error("memberInfo 존재");
                 log.error(memberInfoDTO.get().getEmail());
                 Optional<String> refreshToken = refreshTokenDAO.getRefreshToken(memberInfoDTO.get());
                 // 이메일과 PK로 찾아온 리프레쉬 토큰이 존재함을 확인하면 연결을 맺을 수 있다.
@@ -62,7 +66,9 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
             }
         }
         // 토큰이 없거나 요청이 잘못되었다면 연결을 맺지 않는다.
-        return false;
+        // 에러를 담은 responseBody를 반환하기 위해 예외를 발생시키면, WebFluxExceptionHandler에서 이를 인계받아 처리한다.
+        // TODO 예외를 발생시키면 핸들러가 반응을 해야 하는데 아무리 해도 반응을 하지 않는다. 일단은 보류하고, 채팅방 기능을 먼저 구현하겠다.
+        throw new AuthorizationException(ErrorCode.UNAUTHORIZED, "unauthorized attempt to connect websocket");
     }
 
     @Override
