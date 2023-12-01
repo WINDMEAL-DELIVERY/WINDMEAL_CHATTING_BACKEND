@@ -35,8 +35,8 @@ dependencies {
     // NoSQL 의존성 : redis : jwt 저장용, mongoDB : 채팅 메세지 저장용
 
     // 아래와 같이 몽고디비를 import 해주면 몽고디비 단독으로만 사용할 수 있다.
-//    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
-    implementation ('org.springframework.boot:spring-boot-starter-data-mongodb-reactive')
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+//    implementation ('org.springframework.boot:spring-boot-starter-data-mongodb-reactive')
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // jwt 관련 의존성
