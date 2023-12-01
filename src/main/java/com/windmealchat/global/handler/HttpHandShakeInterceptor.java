@@ -1,38 +1,29 @@
 package com.windmealchat.global.handler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.windmealchat.chat.exception.AuthorizationException;
-import com.windmealchat.global.exception.ErrorCode;
-import com.windmealchat.global.exception.ExceptionResponseDTO;
+import static com.windmealchat.global.constants.TokenConstants.CODE;
+import static com.windmealchat.global.constants.TokenConstants.PREFIX_REFRESHTOKEN;
+import static com.windmealchat.global.constants.TokenConstants.TOKEN;
+
 import com.windmealchat.global.token.dao.RefreshTokenDAO;
 import com.windmealchat.global.token.impl.TokenProvider;
-import com.windmealchat.global.util.CookieUtil;
+import com.windmealchat.global.util.AES256Util;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
+import java.util.Map;
+import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
-import java.util.Optional;
-
-import static com.windmealchat.global.constants.TokenConstants.TOKEN;
-
-/*
-    웹소켓 연결도 결국엔 HTTP의 확장, 즉 3-way handshake의 과정에 upgrade 헤더가 추가된 것이다.
-    우리는 HTTP 핸드쉐이크의 과정 중간에서 쿠키에 접근하여 토큰을 가져와야 한다.
-    그렇기에 HandShakeInterceptor를 구현한다. 이 과정에서
- */
 @Slf4j
 @RequiredArgsConstructor
 public class HttpHandShakeInterceptor implements HandshakeInterceptor {
 
+    private final AES256Util aes256Util;
     private final TokenProvider tokenProvider;
     private final RefreshTokenDAO refreshTokenDAO;
     /*
@@ -55,7 +46,8 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
             if(memberInfoDTO.isPresent()) {
                 log.error("memberInfo 존재");
                 log.error(memberInfoDTO.get().getEmail());
-                Optional<String> refreshToken = refreshTokenDAO.getRefreshToken(memberInfoDTO.get());
+                String key = PREFIX_REFRESHTOKEN + memberInfoDTO.get().getId() + memberInfoDTO.get().getEmail();
+                Optional<String> refreshToken = refreshTokenDAO.getRefreshToken(aes256Util.encrypt(key));
                 // 이메일과 PK로 찾아온 리프레쉬 토큰이 존재함을 확인하면 연결을 맺을 수 있다.
                 if(refreshToken.isPresent()) {
                     // clientInboundChannelHandler (메세지를 송신하기 전 콜백되는 핸들러)에서 사용할 수 있도록 세션에 토큰을 저장해준다.
@@ -66,9 +58,8 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
             }
         }
         // 토큰이 없거나 요청이 잘못되었다면 연결을 맺지 않는다.
-        // 에러를 담은 responseBody를 반환하기 위해 예외를 발생시키면, WebFluxExceptionHandler에서 이를 인계받아 처리한다.
-        // TODO 예외를 발생시키면 핸들러가 반응을 해야 하는데 아무리 해도 반응을 하지 않는다. 일단은 보류하고, 채팅방 기능을 먼저 구현하겠다.
-        throw new AuthorizationException(ErrorCode.UNAUTHORIZED, "unauthorized attempt to connect websocket");
+        // 여기서 사용자에게 예외를 전달해줄 방법은 없고, 그냥 연결을 맺지 않는 정도가 최선인 듯 하다.
+        return false;
     }
 
     @Override
@@ -77,11 +68,9 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
         log.info("Handshake 완료");
     }
 
-    private String resolveToken (HttpServletRequest servletRequest) {
-        Cookie cookie = CookieUtil.getCookie(servletRequest, TOKEN).orElse(null);
-        if(cookie != null)
-            return cookie.getValue();
-        return null;
+    private String resolveToken (HttpServletRequest servletRequest) throws Exception{
+        String queryString = servletRequest.getParameter(CODE);
+        return aes256Util.decrypt(queryString);
     }
     private Optional<MemberInfoDTO> resolveMemberInfo (String token) {
         Optional<MemberInfoDTO> memberInfoDTO = Optional.empty();

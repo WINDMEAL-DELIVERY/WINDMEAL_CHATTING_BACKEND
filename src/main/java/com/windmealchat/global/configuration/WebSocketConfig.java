@@ -7,6 +7,7 @@ import com.windmealchat.global.handler.StompErrorHandler;
 import com.windmealchat.global.token.dao.RefreshTokenDAO;
 import com.windmealchat.global.token.impl.RefreshTokenDAOImpl;
 import com.windmealchat.global.token.impl.TokenProvider;
+import com.windmealchat.global.util.AES256Util;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -29,9 +30,10 @@ import static com.windmealchat.global.constants.StompConstants.*;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    private final AES256Util aes256Util;
+    private final ObjectMapper objectMapper;
     private final RedisTemplate redisTemplate;
     private final TokenProvider tokenProvider;
-    private final ObjectMapper objectMapper;
 
     @Bean
     public RefreshTokenDAO refreshTokenDAO() {
@@ -50,7 +52,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Bean
     public HandshakeInterceptor HttpHandShakeInterceptor() {
-        return new HttpHandShakeInterceptor(tokenProvider, refreshTokenDAO());
+        return new HttpHandShakeInterceptor(aes256Util, tokenProvider, refreshTokenDAO());
     }
 
     @Override
@@ -72,7 +74,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // 클라이언트에서 웹소켓에 접속할 수 있는 엔드포인트를 지정한다.
         // ws://localhost:8080/stomp/chat 의 형태가 될 것이다.
         stompEndpointRegistry.addEndpoint("/stomp/chat")
-                .setAllowedOrigins("http://localhost:8081", "http://localhost:3000", "http://localhost:8080")
+//                .setAllowedOrigins("http://localhost:8081", "http://localhost:3000", "http://localhost:8080")
+                .setAllowedOriginPatterns("*")
                 .addInterceptors(HttpHandShakeInterceptor());
 //                .withSockJS();
         stompEndpointRegistry.setErrorHandler(stompErrorHandler());

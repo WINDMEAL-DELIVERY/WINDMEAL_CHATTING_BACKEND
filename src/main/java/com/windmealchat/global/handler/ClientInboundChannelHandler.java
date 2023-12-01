@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+import static com.windmealchat.global.constants.TokenConstants.AUTHORIZATION_HEADER;
 import static com.windmealchat.global.constants.TokenConstants.TOKEN;
 
 @Slf4j
@@ -47,6 +48,8 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
     private boolean TokenProcessing(Message<?> message) throws JsonProcessingException {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         log.error("커맨드 타입 : " + accessor.getCommand());
+        log.error("인증 헤더  : " + accessor.getNativeHeader(AUTHORIZATION_HEADER));
+
 
         /*
             메세지가 이미 발송되면 중간에 변경할 수 있는 방법이 없는 것 같다.
