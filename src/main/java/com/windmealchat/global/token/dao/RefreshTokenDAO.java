@@ -5,5 +5,5 @@ import com.windmealchat.member.dto.response.MemberInfoDTO;
 import java.util.Optional;
 
 public interface RefreshTokenDAO {
-    Optional<String> getRefreshToken(MemberInfoDTO memberInfoDTO);
+    Optional<String> getRefreshToken(String key);
 }

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+import static com.windmealchat.global.constants.TokenConstants.AUTHORIZATION_HEADER;
 import static com.windmealchat.global.constants.TokenConstants.TOKEN;
 
 @Slf4j

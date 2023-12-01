@@ -36,18 +36,14 @@ public class TokenProvider implements InitializingBean {
      * @throws JwtException 파싱과정에서 토큰 오류가 발생하면 이를 호출한 클래스로 예외를 위임한다.
      */
     public Optional<MemberInfoDTO> getMemberInfoFromToken(String token) {
-        Long userId;
-        String email;
+        Long userId = null;
+        String email = null;
         if(validateToken(token)) {
             Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
             // 사용자 ID
             userId = Long.parseLong(claims.getSubject());
             // 사용자 이메일
             email = (String)claims.get(EMAIL);
-        } else {
-            // 토큰이 만료되었거나 검증 과정에서 문제가 있었다면 반환값은 null로 할당된다.
-            userId = null;
-            email = null;
         }
         return MemberInfoDTO.ofNullable(userId, email);
     }
