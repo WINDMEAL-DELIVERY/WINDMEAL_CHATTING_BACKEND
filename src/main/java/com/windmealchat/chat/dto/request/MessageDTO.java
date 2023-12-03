@@ -3,6 +3,7 @@ package com.windmealchat.chat.dto.request;
 
 import com.windmealchat.chat.domain.MessageDocument;
 import com.windmealchat.chat.domain.MessageType;
+import com.windmealchat.member.dto.response.MemberInfoDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,8 +18,8 @@ public class MessageDTO {
     private MessageType type;
     private String message;
 
-    public MessageDocument toEntity() {
-        return new MessageDocument(this);
+    public MessageDocument toEntity(MemberInfoDTO memberInfoDTO) {
+        return new MessageDocument(this, memberInfoDTO);
     }
 
 }
