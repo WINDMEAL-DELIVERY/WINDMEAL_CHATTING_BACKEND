@@ -1,6 +1,7 @@
 package com.windmealchat.global.handler;
 
 import static com.windmealchat.global.constants.TokenConstants.CODE;
+import static com.windmealchat.global.constants.TokenConstants.CODE_A;
 import static com.windmealchat.global.constants.TokenConstants.PREFIX_REFRESHTOKEN;
 import static com.windmealchat.global.constants.TokenConstants.TOKEN;
 
@@ -36,7 +37,8 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
         if(request instanceof ServletServerHttpRequest) {
             ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) request;
             HttpServletRequest servletRequest = servletServerHttpRequest.getServletRequest();
-            String token = resolveToken(servletRequest);
+            String token = resolveToken(servletRequest, CODE);
+            String alarmToken = resolveToken(servletRequest, CODE_A);
             Optional<MemberInfoDTO> memberInfoDTO = resolveMemberInfo(token);
             /*
                 연결을 맺기 전에 토큰을 검증하는 단계
@@ -68,8 +70,8 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
         log.info("Handshake 완료");
     }
 
-    private String resolveToken (HttpServletRequest servletRequest) throws Exception{
-        String queryString = servletRequest.getParameter(CODE);
+    private String resolveToken (HttpServletRequest servletRequest, String type) throws Exception{
+        String queryString = servletRequest.getParameter(type);
         return aes256Util.decrypt(queryString);
     }
     private Optional<MemberInfoDTO> resolveMemberInfo (String token) {
