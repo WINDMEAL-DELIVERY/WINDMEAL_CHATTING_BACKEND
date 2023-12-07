@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ChatService {
 
-  private final TokenProvider tokenProvider;
   private final SimpMessageSendingOperations messageTemplate;
   private final MessageDocumentRepository messageDocumentRepository;
 
@@ -33,19 +32,17 @@ public class ChatService {
     messageTemplate.convertAndSend(SUB_PREFIX + SUB_CHAT_ROOM + messageDTO.getChatRoomId(), systemResponse);
   }
 
-  public void sendMessage(MessageDTO messageDTO, SimpMessageHeaderAccessor accessor) {
-    MemberInfoDTO memberInfoDTO = HeaderAccessorUtil.convertToMemberInfo(accessor, tokenProvider);
+  public void sendMessage(MessageDTO messageDTO, MemberInfoDTO memberInfoDTO) {
     MessageResponse messageResponse = MessageResponse.of(messageDTO, memberInfoDTO);
-    MessageDocument messageDocument = messageDTO.toEntity();
+    MessageDocument messageDocument = messageDTO.toEntity(memberInfoDTO);
     messageDocumentRepository.save(messageDocument);
-    getMessagesByChatroomId(Long.valueOf(messageDTO.getChatRoomId()));
     messageTemplate.convertAndSend(SUB_PREFIX + SUB_CHAT_ROOM + messageDTO.getChatRoomId(), messageResponse);
   }
 
-  public void getMessagesByChatroomId(Long chatroomId) {
-    List<MessageDocument> messages = messageDocumentRepository.findByChatroomId(chatroomId);
-    for (MessageDocument message : messages) {
-      log.info(message.getMessageId() + " " + message.getMessage());
-    }
-  }
+//  public void getMessagesByChatroomId(Long chatroomId) {
+//    List<MessageDocument> messages = messageDocumentRepository.findByChatroomId(chatroomId);
+//    for (MessageDocument message : messages) {
+//      log.info(message.getMessageId() + " " + message.getMessage());
+//    }
+//  }
 }

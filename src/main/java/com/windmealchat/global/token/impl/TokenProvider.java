@@ -23,6 +23,7 @@ public class TokenProvider implements InitializingBean {
     private Key key;
 
 
+    // TODO 이 예외는 어떻게 처리해줄지 고민해보기
     @Override
     public void afterPropertiesSet() throws Exception {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
