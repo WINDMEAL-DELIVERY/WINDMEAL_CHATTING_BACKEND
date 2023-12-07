@@ -5,7 +5,6 @@ import static com.windmealchat.global.constants.TokenConstants.TOKEN;
 
 import com.windmealchat.global.token.impl.TokenProvider;
 import com.windmealchat.global.util.AES256Util;
-import com.windmealchat.global.util.HeaderAccessorUtil;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
 import java.util.Map;
 import java.util.Optional;
@@ -19,33 +18,43 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TokenService {
 
-  private final AES256Util aes256Util;
   private final TokenProvider tokenProvider;
 
-  public Optional<String> resolveAlarmToken(SimpMessageHeaderAccessor accessor) {
+  public String resolveAlarmToken(SimpMessageHeaderAccessor accessor) {
     Map<String, Object> session = accessor.getSessionAttributes();
-    String alarmToken = (String) session.get(ALARM_TOKEN);
-    String result;
-    try {
-      result = aes256Util.decrypt(alarmToken);
-    } catch (Exception e) {
-      result = null;
-    }
-    return Optional.ofNullable(result);
+    return (String) session.get(ALARM_TOKEN);
   }
 
   public Optional<MemberInfoDTO> resolveJwtToken(SimpMessageHeaderAccessor accessor) {
     Map<String, Object> session = accessor.getSessionAttributes();
-    String encryptedToken = (String) session.get(TOKEN);
+    String accessToken = (String) session.get(TOKEN);
     Optional<MemberInfoDTO> result;
     try {
-      String accessToken = aes256Util.decrypt(encryptedToken);
       result = tokenProvider.getMemberInfoFromToken(
           accessToken);
     } catch (Exception e) {
-      result = Optional.ofNullable(null);
+      e.printStackTrace();
+      result = Optional.empty();
     }
     return result;
   }
+
+  //  public <T> Optional<T> resolveToken(SimpMessageHeaderAccessor accessor, String tokenType,
+//      TokenResolver<T> resolver) {
+//    Map<String, Object> session = accessor.getSessionAttributes();
+//    String accessToken = (String) session.get(tokenType);
+//    Optional<T> result = Optional.empty();
+//    try {
+//      if(tokenType.equals(TOKEN)) {
+//        result = tokenProvider.getMemberInfoFromToken(accessToken);
+//      }
+//      else {
+//        result = (Optional<T>) accessToken;
+//      }
+//    } catch (Exception e) {
+//      e.printStackTrace();
+//    }
+//    return result;
+//  }
 
 }

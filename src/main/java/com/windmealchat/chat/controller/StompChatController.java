@@ -25,21 +25,17 @@ public class StompChatController {
   @MessageMapping(value = "/chat/enter")
   public void enter(MessageDTO messageDTO, SimpMessageHeaderAccessor accessor) {
     // 채팅방에 처음 사용자가 참가할때, SYSTEM 타입의 메세지를 전송해주는 컨트롤러
-    Optional<String> tokenOptional = tokenService.resolveAlarmToken(accessor);
-    // 상대방 토큰이 존재할때만 채팅 메세지 보냄
-    if (tokenOptional.isPresent()) {
-      sendNotification(messageDTO, tokenOptional.get());
+      sendNotification(messageDTO, tokenService.resolveAlarmToken(accessor));
       chatService.enter(messageDTO);
-    }
   }
 
   @MessageMapping(value = "/chat/message")
   public void sendMessage(MessageDTO messageDTO, SimpMessageHeaderAccessor accessor) {
     // TODO 메세지 타입에 따른 처리 : 만약 이미지 타입의 메시지가 오게 된다면 그에 따른 처리를 해주어야 한다.
     Optional<MemberInfoDTO> memberInfoOptional = tokenService.resolveJwtToken(accessor);
-    Optional<String> tokenOptional = tokenService.resolveAlarmToken(accessor);
-    if (memberInfoOptional.isPresent() && tokenOptional.isPresent()) {
-      sendNotification(messageDTO, tokenOptional.get());
+    String alarmToken = tokenService.resolveAlarmToken(accessor);
+    if (memberInfoOptional.isPresent()) {
+      sendNotification(messageDTO, alarmToken);
       chatService.sendMessage(messageDTO, memberInfoOptional.get());
     }
   }

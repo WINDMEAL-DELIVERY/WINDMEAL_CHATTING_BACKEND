@@ -1,6 +1,7 @@
 package com.windmealchat.global.util;
 
 import java.util.Base64;
+import java.util.Optional;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -29,14 +30,20 @@ public class AES256Util {
     return Base64.getEncoder().encodeToString(encrypted);
   }
 
-  public String decrypt(String cipherText) throws Exception {
-    Cipher cipher = Cipher.getInstance(alg);
-    SecretKeySpec keySpec = new SecretKeySpec(encryptKey.getBytes(), "AES");
-    IvParameterSpec ivParamSpec = new IvParameterSpec(iv.getBytes());
-    cipher.init(Cipher.DECRYPT_MODE, keySpec, ivParamSpec);
-    // 복호화하기 전에 디코딩해준다.
-    byte[] decodedBytes = Base64.getDecoder().decode(cipherText);
-    byte[] decrypted = cipher.doFinal(decodedBytes);
-    return new String(decrypted, "UTF-8");
+  public Optional<String> decrypt(String cipherText) {
+    Optional<String> result = Optional.empty();
+    try {
+      Cipher cipher = Cipher.getInstance(alg);
+      SecretKeySpec keySpec = new SecretKeySpec(encryptKey.getBytes(), "AES");
+      IvParameterSpec ivParamSpec = new IvParameterSpec(iv.getBytes());
+      cipher.init(Cipher.DECRYPT_MODE, keySpec, ivParamSpec);
+      // 복호화하기 전에 디코딩해준다.
+      byte[] decodedBytes = Base64.getDecoder().decode(cipherText);
+      byte[] decrypted = cipher.doFinal(decodedBytes);
+      result = Optional.ofNullable(new String(decrypted, "UTF-8"));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return result;
   }
 }

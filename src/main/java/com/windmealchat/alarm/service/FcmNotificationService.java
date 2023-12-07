@@ -14,13 +14,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FcmNotificationService {
 
-  private final AES256Util aes256Util;
   private final FirebaseMessaging firebaseMessaging;
 
-  public void sendNotification(FcmNotificationRequest request, String encryptedToken) {
+  public void sendNotification(FcmNotificationRequest request, String token) {
 
     try {
-      String token = aes256Util.decrypt(encryptedToken);
       Notification notification = Notification.builder()
           .setTitle(request.getTitle())
           .setBody(request.getBody())
@@ -31,10 +29,10 @@ public class FcmNotificationService {
           .setNotification(notification)
           .build();
 
-      log.info("알람을 전송합니다 : ");
       firebaseMessaging.send(message);
-      log.info("알람 전송 완료 : " + request.getBody());
+      log.info("알람 전송 성공 : " + request.getBody());
     } catch (Exception e) {
+      log.error("알람 전송 실패 : ");
       e.printStackTrace();
     }
   }
