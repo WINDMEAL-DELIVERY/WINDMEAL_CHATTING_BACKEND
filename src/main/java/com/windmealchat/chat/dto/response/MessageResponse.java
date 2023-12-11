@@ -6,6 +6,10 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * 웹소켓 커넥션이 맺어진 상태에서, 상대에게 채팅을 보낼때 이렇게 보내준다.
+ *
+ */
 @Getter
 public class MessageResponse {
     private final MessageDTO messageDTO;
