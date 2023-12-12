@@ -8,11 +8,11 @@ import com.windmealchat.chat.service.ChatroomService;
 import com.windmealchat.global.dto.ResultDataResponseDTO;
 import com.windmealchat.global.token.service.TokenService;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
-import java.awt.print.Pageable;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,7 +32,9 @@ public class ChatRestController {
   public ResultDataResponseDTO<ChatMessageResponse> messageList(@PathVariable String chatroomId,
       Pageable pageable, HttpServletRequest request) {
     MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
-
+    ChatMessageResponse chatMessages = chatroomService.findChatMessages(memberInfoDTO, pageable,
+        chatroomId);
+    return ResultDataResponseDTO.of(chatMessages);
   }
 
   private Optional<String> resolveToken(HttpServletRequest request) {

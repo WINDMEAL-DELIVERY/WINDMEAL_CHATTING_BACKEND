@@ -27,7 +27,6 @@ public class ChatroomDocument {
   @CreatedDate
   private LocalDateTime createdTime;
 
-  // TODO  이게 되나??
   @Builder
   public ChatroomDocument(Long ownerId, Long guestId, Long orderId) {
     this.ownerId = ownerId;

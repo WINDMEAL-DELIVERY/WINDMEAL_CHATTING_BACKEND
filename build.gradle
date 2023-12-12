@@ -42,9 +42,10 @@ dependencies {
     // fcm 관련 의존성
     implementation 'com.google.firebase:firebase-admin:9.2.0'
 
-    // swagger 관련 의존성
-    implementation 'org.springdoc:springdoc-openapi-ui:1.5.7'
-    implementation 'org.springdoc:springdoc-openapi-security:1.5.7'
+    // 외부 브로커 (메시지큐)
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.4.6'
+    implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.12.4'
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
 
     // jwt 관련 의존성
     compileOnly group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'

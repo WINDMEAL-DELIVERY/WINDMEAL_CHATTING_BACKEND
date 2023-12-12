@@ -22,6 +22,8 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import org.springframework.web.socket.messaging.StompSubProtocolErrorHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+import static com.windmealchat.global.constants.RabbitConstants.AMQ_QUEUE;
+import static com.windmealchat.global.constants.RabbitConstants.EXCHANGE;
 import static com.windmealchat.global.constants.StompConstants.*;
 
 @Slf4j
@@ -63,10 +65,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 //        messageBrokerRegistry.enableSimpleBroker(QUEUE,TOPIC);
 
 //        messageBrokerRegistry.enableSimpleBroker(QUEUE);
-        messageBrokerRegistry.enableSimpleBroker(SUB_PREFIX);
         // 매개변수로 전달한 경로들은 메세지 핸들러로 라우팅되는 경로들이다.
 //         messageBrokerRegistry.setApplicationDestinationPrefixes(TOPIC);
-         messageBrokerRegistry.setApplicationDestinationPrefixes(PUB_PREFIX);
+        messageBrokerRegistry.setApplicationDestinationPrefixes(PUB_PREFIX);
+//        messageBrokerRegistry.enableSimpleBroker(SUB_PREFIX);
+        messageBrokerRegistry.enableStompBrokerRelay(QUEUE, TOPIC, EXCHANGE, AMQ_QUEUE);
     }
 
     @Override
