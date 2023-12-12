@@ -42,6 +42,10 @@ dependencies {
     // fcm 관련 의존성
     implementation 'com.google.firebase:firebase-admin:9.2.0'
 
+    // swagger 관련 의존성
+    implementation 'org.springdoc:springdoc-openapi-ui:1.5.7'
+    implementation 'org.springdoc:springdoc-openapi-security:1.5.7'
+
     // jwt 관련 의존성
     compileOnly group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'

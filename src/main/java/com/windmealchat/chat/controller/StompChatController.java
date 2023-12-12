@@ -3,7 +3,7 @@ package com.windmealchat.chat.controller;
 import com.windmealchat.alarm.dto.FcmNotificationRequest;
 import com.windmealchat.alarm.service.FcmNotificationService;
 import com.windmealchat.chat.dto.request.MessageDTO;
-import com.windmealchat.chat.service.ChatService;
+import com.windmealchat.chat.service.StompChatService;
 import com.windmealchat.global.token.service.TokenService;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
 import java.util.Optional;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Controller;
 @RequiredArgsConstructor
 public class StompChatController {
 
-  private final ChatService chatService;
+  private final StompChatService stompChatService;
   private final TokenService tokenService;
   private final FcmNotificationService fcmNotificationService;
 
@@ -26,7 +26,7 @@ public class StompChatController {
   public void enter(MessageDTO messageDTO, SimpMessageHeaderAccessor accessor) {
     // 채팅방에 처음 사용자가 참가할때, SYSTEM 타입의 메세지를 전송해주는 컨트롤러
       sendNotification(messageDTO, tokenService.resolveAlarmToken(accessor));
-      chatService.enter(messageDTO);
+      stompChatService.enter(messageDTO);
   }
 
   @MessageMapping(value = "/chat/message")
@@ -36,7 +36,7 @@ public class StompChatController {
     String alarmToken = tokenService.resolveAlarmToken(accessor);
     if (memberInfoOptional.isPresent()) {
       sendNotification(messageDTO, alarmToken);
-      chatService.sendMessage(messageDTO, memberInfoOptional.get());
+      stompChatService.sendMessage(messageDTO, memberInfoOptional.get());
     }
   }
 
