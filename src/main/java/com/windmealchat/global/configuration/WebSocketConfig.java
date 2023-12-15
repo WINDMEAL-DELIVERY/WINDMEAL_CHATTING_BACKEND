@@ -16,6 +16,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -67,6 +68,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 //        messageBrokerRegistry.enableSimpleBroker(QUEUE);
         // 매개변수로 전달한 경로들은 메세지 핸들러로 라우팅되는 경로들이다.
 //         messageBrokerRegistry.setApplicationDestinationPrefixes(TOPIC);
+        messageBrokerRegistry.setPathMatcher(new AntPathMatcher("."));
         messageBrokerRegistry.setApplicationDestinationPrefixes(PUB_PREFIX);
 //        messageBrokerRegistry.enableSimpleBroker(SUB_PREFIX);
         messageBrokerRegistry.enableStompBrokerRelay(QUEUE, TOPIC, EXCHANGE, AMQ_QUEUE);

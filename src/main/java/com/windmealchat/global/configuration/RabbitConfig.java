@@ -16,7 +16,6 @@ import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,29 +39,48 @@ public class RabbitConfig {
   }
 
   /* messageConverter를 커스터마이징 하기 위해 Bean 새로 등록 */
-  @Bean
-  public RabbitTemplate rabbitTemplate(){
-    RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory());
-    rabbitTemplate.setMessageConverter(jsonMessageConverter());
-    rabbitTemplate.setRoutingKey(CHAT_QUEUE_NAME);
-    return rabbitTemplate;
-  }
+//  @Bean
+//  public RabbitTemplate rabbitTemplate(){
+//    RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory());
+//    rabbitTemplate.setMessageConverter(jsonMessageConverter());
+//    rabbitTemplate.setRoutingKey(CHAT_QUEUE_NAME);
+//    return rabbitTemplate;
+//  }
 
-  @Bean
-  public SimpleMessageListenerContainer container(){
-    SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
-    container.setConnectionFactory(connectionFactory());
-    container.setQueueNames(CHAT_QUEUE_NAME);
-    container.setMessageListener(null);
-    return container;
-  }
+//  @Bean
+//  public SimpleMessageListenerContainer container(){
+//    SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+//    container.setConnectionFactory(connectionFactory());
+//    container.setQueueNames(CHAT_QUEUE_NAME);
+//    container.setMessageListener(null);
+//    return container;
+//  }
 
   //Spring에서 자동생성해주는 ConnectionFactory는 SimpleConnectionFactory인가? 그건데
   //여기서 사용하는 건 CachingConnectionFacotry라 새로 등록해줌
+//  @Bean
+//  public ConnectionFactory connectionFactory(){
+//    CachingConnectionFactory factory = new CachingConnectionFactory();
+//    factory.setHost("localhost");
+//    factory.setUsername("guest");
+//    factory.setPassword("guest");
+//    return factory;
+//  }
+
   @Bean
-  public ConnectionFactory connectionFactory(){
+  public RabbitTemplate rabbitTemplate() {
+    RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory());
+    rabbitTemplate.setMessageConverter(jsonMessageConverter());
+    return rabbitTemplate;
+  }
+
+  // RabbitMQ와의 연결을 관리하는 클래스
+  @Bean
+  public ConnectionFactory connectionFactory() {
     CachingConnectionFactory factory = new CachingConnectionFactory();
     factory.setHost("localhost");
+    factory.setPort(5672);
+    factory.setVirtualHost("/");
     factory.setUsername("guest");
     factory.setPassword("guest");
     return factory;
