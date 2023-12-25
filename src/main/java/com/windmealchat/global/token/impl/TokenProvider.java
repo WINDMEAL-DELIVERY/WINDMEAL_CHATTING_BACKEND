@@ -41,6 +41,7 @@ public class TokenProvider implements InitializingBean {
         Long userId = null;
         String email = null;
         String nickname = null;
+
         if(validateToken(token)) {
             Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
             // 사용자 ID

@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface ChatroomDocumentRepository extends MongoRepository<ChatroomDocument, String> {
 
-  Slice<ChatroomDocument> findByOwnerIdOrGuestId(Long memberId, Pageable pageable);
+  Slice<ChatroomDocument> findByOwnerIdOrGuestId(Long ownerId, Long guestId, Pageable pageable);
 
   Optional<ChatroomDocument> findById(String id);
 }

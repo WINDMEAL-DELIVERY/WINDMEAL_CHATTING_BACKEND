@@ -4,6 +4,7 @@ import static com.windmealchat.global.constants.TokenConstants.AUTHORIZATION_HEA
 import static com.windmealchat.global.constants.TokenConstants.BEARER_PREFIX;
 
 import com.windmealchat.chat.dto.response.ChatMessageResponse;
+import com.windmealchat.chat.dto.response.ChatroomResponse;
 import com.windmealchat.chat.service.ChatroomService;
 import com.windmealchat.global.dto.ResultDataResponseDTO;
 import com.windmealchat.global.token.service.TokenService;
@@ -32,9 +33,16 @@ public class ChatRestController {
   public ResultDataResponseDTO<ChatMessageResponse> messageList(@PathVariable String chatroomId,
       Pageable pageable, HttpServletRequest request) {
     MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
-    ChatMessageResponse chatMessages = chatroomService.findChatMessages(memberInfoDTO, pageable,
+    ChatMessageResponse chatMessages = chatroomService.getChatMessages(memberInfoDTO, pageable,
         chatroomId);
     return ResultDataResponseDTO.of(chatMessages);
+  }
+
+  @GetMapping("/chatroom")
+  public ResultDataResponseDTO<ChatroomResponse> chatroomList(Pageable pageable, HttpServletRequest request) {
+    MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
+    ChatroomResponse chatrooms = chatroomService.getChatrooms(memberInfoDTO, pageable);
+    return ResultDataResponseDTO.of(chatrooms);
   }
 
   private Optional<String> resolveToken(HttpServletRequest request) {

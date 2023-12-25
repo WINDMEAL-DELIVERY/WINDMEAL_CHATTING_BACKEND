@@ -16,6 +16,7 @@ public enum ErrorCode {
 
     BAD_REQUEST(400, HttpStatus.BAD_REQUEST),
     VALIDATION_ERROR(400, HttpStatus.BAD_REQUEST),
+    ENCRYPT_ERROR(400, HttpStatus.BAD_REQUEST),
     UNAUTHORIZED(401, HttpStatus.UNAUTHORIZED),
     FORBIDDEN(403, HttpStatus.FORBIDDEN),
     NOT_FOUND(404, HttpStatus.NOT_FOUND),
