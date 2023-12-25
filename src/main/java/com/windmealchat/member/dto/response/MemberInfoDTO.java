@@ -15,11 +15,13 @@ import java.util.Optional;
 public class MemberInfoDTO {
     private Long id;
     private String email;
+    private String nickname;
 
-    public static MemberInfoDTO of(Long memberId, String email) {
+    public static MemberInfoDTO of(Long memberId, String email, String nickname) {
         return MemberInfoDTO.builder()
                 .id(memberId)
                 .email(email)
+                .nickname(nickname)
                 .build();
     }
 
@@ -28,14 +30,15 @@ public class MemberInfoDTO {
         필드 값 중 하나라도 null이라면 dto를 null로 할당한다.
         null로 할당될 경우 tcp 핸드쉐이크 과정에서 이를 감지하고 연결을 맺지 않게 된다.
      */
-    public static Optional<MemberInfoDTO> ofNullable(Long memberId, String email) {
+    public static Optional<MemberInfoDTO> ofNullable(Long memberId, String email, String nickname) {
         MemberInfoDTO response;
-        if(memberId == null || email == null)
+        if(memberId == null || email == null || nickname == null)
             response = null;
         else {
             response = MemberInfoDTO.builder()
                     .id(memberId)
                     .email(email)
+                    .nickname(nickname)
                     .build();
         }
         return Optional.ofNullable(response);

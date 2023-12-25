@@ -4,15 +4,16 @@ import static com.windmealchat.global.constants.TokenConstants.AUTHORIZATION_HEA
 import static com.windmealchat.global.constants.TokenConstants.BEARER_PREFIX;
 
 import com.windmealchat.chat.dto.response.ChatMessageResponse;
+import com.windmealchat.chat.dto.response.ChatroomResponse;
 import com.windmealchat.chat.service.ChatroomService;
 import com.windmealchat.global.dto.ResultDataResponseDTO;
 import com.windmealchat.global.token.service.TokenService;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
-import java.awt.print.Pageable;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,7 +33,16 @@ public class ChatRestController {
   public ResultDataResponseDTO<ChatMessageResponse> messageList(@PathVariable String chatroomId,
       Pageable pageable, HttpServletRequest request) {
     MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
+    ChatMessageResponse chatMessages = chatroomService.getChatMessages(memberInfoDTO, pageable,
+        chatroomId);
+    return ResultDataResponseDTO.of(chatMessages);
+  }
 
+  @GetMapping("/chatroom")
+  public ResultDataResponseDTO<ChatroomResponse> chatroomList(Pageable pageable, HttpServletRequest request) {
+    MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
+    ChatroomResponse chatrooms = chatroomService.getChatrooms(memberInfoDTO, pageable);
+    return ResultDataResponseDTO.of(chatrooms);
   }
 
   private Optional<String> resolveToken(HttpServletRequest request) {

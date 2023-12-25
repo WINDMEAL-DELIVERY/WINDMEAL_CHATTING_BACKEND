@@ -9,6 +9,7 @@ import com.windmealchat.global.token.exception.TokenNotExistsException;
 import com.windmealchat.global.token.impl.TokenProvider;
 import com.windmealchat.global.util.AES256Util;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
+import com.windmealchat.member.exception.TokenEncryptionException;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 public class TokenService {
 
   private final TokenProvider tokenProvider;
+  private final AES256Util aes256Util;
 
   public String resolveAlarmToken(SimpMessageHeaderAccessor accessor) {
     Map<String, Object> session = accessor.getSessionAttributes();
@@ -45,7 +47,10 @@ public class TokenService {
   public MemberInfoDTO resolveJwtTokenFromHeader(Optional<String> tokenOptional) {
     String token = tokenOptional.orElseThrow(
         () -> new TokenNotExistsException(ErrorCode.UNAUTHORIZED));
-    return tokenProvider.getMemberInfoFromToken(token)
+    Optional<String> decryptedTokenOptional = aes256Util.decrypt(token);
+    String decryptedToken = decryptedTokenOptional.orElseThrow(
+        () -> new TokenEncryptionException(ErrorCode.ENCRYPT_ERROR));
+    return tokenProvider.getMemberInfoFromToken(decryptedToken)
         .orElseThrow(() -> new InvalidAccessTokenException(ErrorCode.UNAUTHORIZED));
   }
 

@@ -4,6 +4,8 @@ import com.windmealchat.chat.dto.request.MessageDTO;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,12 +16,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Getter
 @Document(collection = "chat")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MessageDocument {
 
   @Id
   private String messageId;
 
-  @Indexed
   private String chatroomId;
 
   private MessageType messageType;
@@ -42,8 +44,9 @@ public class MessageDocument {
   }
 
   @Builder
-  public MessageDocument(String chatroomId, MessageType messageType, String message, Long senderId,
+  public MessageDocument(String messageId, String chatroomId, MessageType messageType, String message, Long senderId,
       String senderEmail) {
+    this.messageId = messageId;
     this.chatroomId = chatroomId;
     this.messageType = messageType;
     this.message = message;

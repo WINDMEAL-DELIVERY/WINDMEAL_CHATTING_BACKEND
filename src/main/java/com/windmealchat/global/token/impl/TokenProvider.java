@@ -13,6 +13,7 @@ import java.security.Key;
 import java.util.Optional;
 
 import static com.windmealchat.global.constants.TokenConstants.EMAIL;
+import static com.windmealchat.global.constants.TokenConstants.NICKNAME_KEY;
 
 @Slf4j
 @Component
@@ -39,14 +40,18 @@ public class TokenProvider implements InitializingBean {
     public Optional<MemberInfoDTO> getMemberInfoFromToken(String token) {
         Long userId = null;
         String email = null;
+        String nickname = null;
+
         if(validateToken(token)) {
             Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
             // 사용자 ID
             userId = Long.parseLong(claims.getSubject());
             // 사용자 이메일
             email = (String)claims.get(EMAIL);
+            // 사용자 닉네임
+            nickname = (String)claims.get(NICKNAME_KEY);
         }
-        return MemberInfoDTO.ofNullable(userId, email);
+        return MemberInfoDTO.ofNullable(userId, email, nickname);
     }
 
     private boolean validateToken(String token) {
