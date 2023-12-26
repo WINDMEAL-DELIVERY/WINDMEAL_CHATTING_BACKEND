@@ -9,6 +9,7 @@ import com.windmealchat.chat.dto.response.ChatMessageResponse.ChatMessageSpecRes
 import com.windmealchat.chat.dto.response.ChatroomResponse;
 import com.windmealchat.chat.dto.response.ChatroomResponse.ChatroomSpecResponse;
 import com.windmealchat.chat.exception.ChatroomNotFoundException;
+import com.windmealchat.chat.exception.ExitedChatroomException;
 import com.windmealchat.chat.exception.NotChatroomMemberException;
 import com.windmealchat.chat.repository.ChatroomDocumentRepository;
 import com.windmealchat.chat.repository.MessageDocumentRepository;
@@ -40,11 +41,8 @@ public class ChatroomService {
    * @return
    */
   public ChatroomResponse getChatrooms(MemberInfoDTO memberInfoDTO, Pageable pageable) {
-//    Slice<ChatroomDocument> chatroomDocumentSlice = chatroomDocumentRepository.findByOwnerIdOrGuestId(
-//        memberInfoDTO.getId(), memberInfoDTO.getId(), pageable);
     Slice<ChatroomDocument> chatroomDocumentSlice = chatroomDocumentRepository.findActiveChatrooms(
         memberInfoDTO.getId(), memberInfoDTO.getId(), pageable);
-
     Slice<ChatroomSpecResponse> map = chatroomDocumentSlice.map(
         chatroomDocument -> toChatroomSpecResponse(chatroomDocument, memberInfoDTO));
     return ChatroomResponse.of(map);
@@ -63,12 +61,7 @@ public class ChatroomService {
     ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatRoomId)
         .orElseThrow(() -> new ChatroomNotFoundException(
             ErrorCode.NOT_FOUND));
-
-    if (!chatroomDocument.getOrderId().equals(memberInfoDTO.getId())
-        && !chatroomDocument.getGuestId().equals(memberInfoDTO.getId())) {
-      throw new NotChatroomMemberException(ErrorCode.BAD_REQUEST);
-    }
-
+    checkChatroom(chatRoomId, memberInfoDTO);
     Slice<MessageDocument> messageDocuments = messageDocumentRepository.findByChatroomId(
         chatroomDocument.getId(), pageable);
     Slice<ChatMessageSpecResponse> chatMessageSpecResponses = messageDocuments.map(
@@ -85,10 +78,7 @@ public class ChatroomService {
     ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(
             chatroomLeaveRequest.getChatroomId())
         .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
-    if (!chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())
-        && !chatroomDocument.getGuestId().equals(memberInfoDTO.getId())) {
-      throw new NotChatroomMemberException((ErrorCode.VALIDATION_ERROR));
-    }
+    checkChatroom(chatroomLeaveRequest.getChatroomId(), memberInfoDTO);
     if(chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())) {
         chatroomDocument.updateIsDeletedByOwner();
     } else {
@@ -116,6 +106,24 @@ public class ChatroomService {
         channel -> channel.queueDeclare(queueName, true, false, false, new HashMap<>()));
     return ChatroomSpecResponse.of(chatroomDocument.getId(), messageDocument,
         dok.getMessageCount());
+  }
+
+  /**
+   * 사용자가 이전에 나갔던 채팅방은 아닌지 검증한다.
+   * @param chatroomId
+   * @param memberInfoDTO
+   */
+  private void checkChatroom(String chatroomId, MemberInfoDTO memberInfoDTO) {
+    ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomId)
+        .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
+    if (!chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())
+        && !chatroomDocument.getGuestId().equals(memberInfoDTO.getId())) {
+      throw new NotChatroomMemberException(ErrorCode.VALIDATION_ERROR);
+    }
+    if((chatroomDocument.getOwnerId().equals(memberInfoDTO.getId()) && chatroomDocument.isDeletedByOwner())
+        || (chatroomDocument.getGuestId().equals(memberInfoDTO.getId()) && chatroomDocument.isDeletedByGuest())) {
+      throw new ExitedChatroomException(ErrorCode.BAD_REQUEST);
+    }
   }
 
 }
