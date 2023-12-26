@@ -72,15 +72,11 @@ public class ChatroomService {
    */
   private ChatroomSpecResponse toChatroomSpecResponse(ChatroomDocument chatroomDocument,
       MemberInfoDTO memberInfoDTO) {
-//    Optional<MessageDocument> lastMessageOptional = messageDocumentRepository.findTopByChatroomId(
-//        chatroomDocument.getId());
     MessageDocument messageDocument = messageDocumentRepository.findTopByChatroomIdOrderByCreatedTimeDesc(
         chatroomDocument.getId());
     String queueName = "room." + chatroomDocument.getId() + "." + memberInfoDTO.getEmail().split("@")[0];
     AMQP.Queue.DeclareOk dok = rabbitTemplate.execute(
         channel -> channel.queueDeclare(queueName, true, false, false, new HashMap<>()));
-//    return ChatroomSpecResponse.of(chatroomDocument.getId(), lastMessageOptional,
-//        dok.getMessageCount());
     return ChatroomSpecResponse.of(chatroomDocument.getId(), messageDocument,
         dok.getMessageCount());
   }

@@ -1,7 +1,7 @@
 package com.windmealchat.chat.dto.response;
 
 import com.windmealchat.chat.domain.MessageDocument;
-import java.util.Optional;
+import com.windmealchat.chat.domain.MessageType;
 import lombok.Getter;
 import org.springframework.data.domain.Slice;
 
@@ -23,25 +23,24 @@ public class ChatroomResponse {
 
     private String chatroomId;
     private String lastMessage;
+    private MessageType messageType;
     private int uncheckedMessageCount;
 
-    private ChatroomSpecResponse(String chatroomId, String lastMessage, int uncheckedMessageCount) {
+    private ChatroomSpecResponse(String chatroomId, String lastMessage, MessageType messageType,
+        int uncheckedMessageCount) {
       this.chatroomId = chatroomId;
       this.lastMessage = lastMessage;
+      this.messageType = messageType;
       this.uncheckedMessageCount = uncheckedMessageCount;
     }
 
-//    public static ChatroomSpecResponse of(String chatroomId,
-//        Optional<MessageDocument> lastMessageOptional, int uncheckedMessageCount) {
-//      String lastMessage =
-//          lastMessageOptional.isPresent() ? lastMessageOptional.get().getMessage() : "";
-//      return new ChatroomSpecResponse(chatroomId, lastMessage, uncheckedMessageCount);
-//    }
-
     public static ChatroomSpecResponse of(String chatroomId,
         MessageDocument messageDocument, int uncheckedMessageCount) {
-      return new ChatroomSpecResponse(chatroomId,
-          messageDocument != null ? messageDocument.getMessage() : "", uncheckedMessageCount);
+      String lastMessage = messageDocument != null ? messageDocument.getMessage() : "";
+      MessageType lastMessageType =
+          messageDocument != null ? messageDocument.getMessageType() : MessageType.SYSTEM;
+      return new ChatroomSpecResponse(chatroomId, lastMessage, lastMessageType,
+          uncheckedMessageCount);
     }
   }
 }
