@@ -3,6 +3,7 @@ package com.windmealchat.chat.controller;
 import static com.windmealchat.global.constants.TokenConstants.AUTHORIZATION_HEADER;
 import static com.windmealchat.global.constants.TokenConstants.BEARER_PREFIX;
 
+import com.windmealchat.chat.dto.request.ChatroomLeaveRequest;
 import com.windmealchat.chat.dto.response.ChatMessageResponse;
 import com.windmealchat.chat.dto.response.ChatroomResponse;
 import com.windmealchat.chat.service.ChatroomService;
@@ -17,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -43,6 +46,13 @@ public class ChatRestController {
     MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
     ChatroomResponse chatrooms = chatroomService.getChatrooms(memberInfoDTO, pageable);
     return ResultDataResponseDTO.of(chatrooms);
+  }
+
+  @PostMapping("/chatroom")
+  public ResultDataResponseDTO leaveChatroom(@RequestBody ChatroomLeaveRequest chatroomLeaveRequest, HttpServletRequest request) {
+    MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
+    chatroomService.leaveChatroom(memberInfoDTO, chatroomLeaveRequest);
+    return ResultDataResponseDTO.empty();
   }
 
   private Optional<String> resolveToken(HttpServletRequest request) {

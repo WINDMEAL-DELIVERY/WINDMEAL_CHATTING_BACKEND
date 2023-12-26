@@ -40,5 +40,12 @@ public class ChatroomDocument {
     this.isDeletedByGuest = false;
   }
 
+  public void updateIsDeletedByOwner() {
+    this.isDeletedByOwner = true;
+  }
+
+  public void updateIsDeletedByGuest() {
+    this.isDeletedByGuest = true;
+  }
 
 }

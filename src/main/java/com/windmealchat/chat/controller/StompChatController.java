@@ -53,7 +53,6 @@ public class StompChatController {
 
   @RabbitListener(queues = CHAT_QUEUE_NAME)
   public void receive(ChatMessageSpecResponse chatMessageSpecResponse){
-
     System.out.println("received : " + chatMessageSpecResponse.getMessage());
   }
 
