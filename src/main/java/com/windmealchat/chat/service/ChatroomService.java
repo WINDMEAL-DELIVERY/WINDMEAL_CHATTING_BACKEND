@@ -35,7 +35,6 @@ public class ChatroomService {
 
   /**
    * 요청자가 속한 채팅방을 페이지네이션을 적용하여 조회한다. 채팅방의 정보와 더불어 사용자가 읽지 않은 채팅의 수, 마지막 채팅 메시지를 조회한다.
-   *
    * @param memberInfoDTO
    * @param pageable
    * @return
@@ -71,16 +70,18 @@ public class ChatroomService {
 
   /**
    * 특정 채팅방에서 나간다.
+   *
    * @param memberInfoDTO
    * @param chatroomLeaveRequest
    */
-  public void leaveChatroom(MemberInfoDTO memberInfoDTO, ChatroomLeaveRequest chatroomLeaveRequest) {
+  public void leaveChatroom(MemberInfoDTO memberInfoDTO,
+      ChatroomLeaveRequest chatroomLeaveRequest) {
     ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(
             chatroomLeaveRequest.getChatroomId())
         .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
     checkChatroom(chatroomLeaveRequest.getChatroomId(), memberInfoDTO);
-    if(chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())) {
-        chatroomDocument.updateIsDeletedByOwner();
+    if (chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())) {
+      chatroomDocument.updateIsDeletedByOwner();
     } else {
       chatroomDocument.updateIsDeletedByGuest();
     }
@@ -104,12 +105,12 @@ public class ChatroomService {
         "room." + chatroomDocument.getId() + "." + memberInfoDTO.getEmail().split("@")[0];
     AMQP.Queue.DeclareOk dok = rabbitTemplate.execute(
         channel -> channel.queueDeclare(queueName, true, false, false, new HashMap<>()));
-    return ChatroomSpecResponse.of(chatroomDocument.getId(), messageDocument,
-        dok.getMessageCount());
+    return ChatroomSpecResponse.of(chatroomDocument, messageDocument, dok.getMessageCount());
   }
 
   /**
    * 사용자가 이전에 나갔던 채팅방은 아닌지 검증한다.
+   * 채팅방에 사용자가 주인이나 손님으로 존재하는지, 존재한다면 이전에 나가지는 않았는지 순으로 검증한다.
    * @param chatroomId
    * @param memberInfoDTO
    */
@@ -120,8 +121,10 @@ public class ChatroomService {
         && !chatroomDocument.getGuestId().equals(memberInfoDTO.getId())) {
       throw new NotChatroomMemberException(ErrorCode.VALIDATION_ERROR);
     }
-    if((chatroomDocument.getOwnerId().equals(memberInfoDTO.getId()) && chatroomDocument.isDeletedByOwner())
-        || (chatroomDocument.getGuestId().equals(memberInfoDTO.getId()) && chatroomDocument.isDeletedByGuest())) {
+    if ((chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())
+        && chatroomDocument.isDeletedByOwner())
+        || (chatroomDocument.getGuestId().equals(memberInfoDTO.getId())
+        && chatroomDocument.isDeletedByGuest())) {
       throw new ExitedChatroomException(ErrorCode.BAD_REQUEST);
     }
   }
