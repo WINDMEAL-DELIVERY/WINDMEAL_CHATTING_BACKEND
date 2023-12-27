@@ -2,10 +2,13 @@ package com.windmealchat.chat.service;
 
 import static com.windmealchat.global.constants.StompConstants.SYSTEM_GREETING;
 
+import com.windmealchat.chat.domain.ChatroomDocument;
 import com.windmealchat.chat.domain.MessageDocument;
 import com.windmealchat.chat.dto.request.MessageDTO;
 import com.windmealchat.chat.dto.response.ChatMessageResponse.ChatMessageSpecResponse;
 import com.windmealchat.chat.exception.ChatroomNotFoundException;
+import com.windmealchat.chat.exception.ExitedChatroomException;
+import com.windmealchat.chat.exception.NotChatroomMemberException;
 import com.windmealchat.chat.repository.ChatroomDocumentRepository;
 import com.windmealchat.chat.repository.MessageDocumentRepository;
 import com.windmealchat.global.exception.ErrorCode;
@@ -22,19 +25,16 @@ public class StompChatService {
 
   private final ChatroomDocumentRepository chatroomDocumentRepository;
   private final MessageDocumentRepository messageDocumentRepository;
-  //  private final SimpMessageSendingOperations messageTemplate;
   private final RabbitTemplate rabbitTemplate;
 
   public void enter(String chatroomId, MessageDTO messageDTO, MemberInfoDTO memberInfoDTO) {
     MessageDocument systemMessageDocument = messageDTO.toDocument(SYSTEM_GREETING);
     ChatMessageSpecResponse systemMessageSpecResponse = ChatMessageSpecResponse.of(
         systemMessageDocument);
+    checkChatroom(chatroomId, memberInfoDTO);
     messageDocumentRepository.save(systemMessageDocument);
-    log.error(chatroomId);
-    log.error(memberInfoDTO.getEmail().split("@")[0]);
-//    messageTemplate.convertAndSend(SUB_PREFIX + SUB_CHAT_ROOM + messageDTO.getChatRoomId(), systemMessageSpecResponse);
-//    rabbitTemplate.convertAndSend(CHAT_AMQ_TOPIC, "room." + chatroomId, systemMessageSpecResponse);
-    rabbitTemplate.convertAndSend("room." + chatroomId + "." + memberInfoDTO.getEmail().split("@")[0],
+    rabbitTemplate.convertAndSend(
+        "room." + chatroomId + "." + memberInfoDTO.getEmail().split("@")[0],
         systemMessageSpecResponse);
   }
 
@@ -43,11 +43,24 @@ public class StompChatService {
     ChatMessageSpecResponse chatMessageSpecResponse = ChatMessageSpecResponse.of(messageDocument);
     chatroomDocumentRepository.findById(chatroomId).orElseThrow(() -> new ChatroomNotFoundException(
         ErrorCode.NOT_FOUND));
+    checkChatroom(chatroomId, memberInfoDTO);
     messageDocumentRepository.save(messageDocument);
-//    messageTemplate.convertAndSend(SUB_PREFIX + SUB_CHAT_ROOM + messageDTO.getChatRoomId(), chatMessageSpecResponse);
-//    rabbitTemplate.convertAndSend(CHAT_AMQ_TOPIC, "room." + chatroomId, chatMessageSpecResponse);
-    rabbitTemplate.convertAndSend("room." + chatroomId + "." + memberInfoDTO.getEmail().split("@")[0],
+    rabbitTemplate.convertAndSend(
+        "room." + chatroomId + "." + memberInfoDTO.getEmail().split("@")[0],
         chatMessageSpecResponse);
+  }
+
+  private void checkChatroom(String chatroomId, MemberInfoDTO memberInfoDTO) {
+    ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomId)
+        .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
+    if (!chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())
+        && !chatroomDocument.getGuestId().equals(memberInfoDTO.getId())) {
+      throw new NotChatroomMemberException(ErrorCode.VALIDATION_ERROR);
+    }
+    if((chatroomDocument.getOwnerId().equals(memberInfoDTO.getId()) && chatroomDocument.isDeletedByOwner())
+    || (chatroomDocument.getGuestId().equals(memberInfoDTO.getId()) && chatroomDocument.isDeletedByGuest())) {
+      throw new ExitedChatroomException(ErrorCode.BAD_REQUEST);
+    }
   }
 
 

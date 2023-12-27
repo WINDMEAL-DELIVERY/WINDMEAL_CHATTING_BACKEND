@@ -3,11 +3,13 @@ package com.windmealchat.chat.service;
 import com.rabbitmq.client.AMQP;
 import com.windmealchat.chat.domain.ChatroomDocument;
 import com.windmealchat.chat.domain.MessageDocument;
+import com.windmealchat.chat.dto.request.ChatroomLeaveRequest;
 import com.windmealchat.chat.dto.response.ChatMessageResponse;
 import com.windmealchat.chat.dto.response.ChatMessageResponse.ChatMessageSpecResponse;
 import com.windmealchat.chat.dto.response.ChatroomResponse;
 import com.windmealchat.chat.dto.response.ChatroomResponse.ChatroomSpecResponse;
 import com.windmealchat.chat.exception.ChatroomNotFoundException;
+import com.windmealchat.chat.exception.ExitedChatroomException;
 import com.windmealchat.chat.exception.NotChatroomMemberException;
 import com.windmealchat.chat.repository.ChatroomDocumentRepository;
 import com.windmealchat.chat.repository.MessageDocumentRepository;
@@ -31,34 +33,59 @@ public class ChatroomService {
   private final RabbitTemplate rabbitTemplate;
 
 
+  /**
+   * 요청자가 속한 채팅방을 페이지네이션을 적용하여 조회한다. 채팅방의 정보와 더불어 사용자가 읽지 않은 채팅의 수, 마지막 채팅 메시지를 조회한다.
+   * @param memberInfoDTO
+   * @param pageable
+   * @return
+   */
   public ChatroomResponse getChatrooms(MemberInfoDTO memberInfoDTO, Pageable pageable) {
-    Slice<ChatroomDocument> chatroomDocumentSlice = chatroomDocumentRepository.findByOwnerIdOrGuestId(
+    Slice<ChatroomDocument> chatroomDocumentSlice = chatroomDocumentRepository.findActiveChatrooms(
         memberInfoDTO.getId(), memberInfoDTO.getId(), pageable);
-
     Slice<ChatroomSpecResponse> map = chatroomDocumentSlice.map(
         chatroomDocument -> toChatroomSpecResponse(chatroomDocument, memberInfoDTO));
     return ChatroomResponse.of(map);
   }
 
+  /**
+   * 특정 채팅방에 속하는 채팅을 페이지네이션을 적용하여 조회한다.
+   *
+   * @param memberInfoDTO
+   * @param pageable
+   * @param chatRoomId
+   * @return
+   */
   public ChatMessageResponse getChatMessages(MemberInfoDTO memberInfoDTO, Pageable pageable,
       String chatRoomId) {
-
-    // 먼저 사용자가 전달한 채팅방 id로 존재하는 채팅방이 있는지 찾는다.
     ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatRoomId)
         .orElseThrow(() -> new ChatroomNotFoundException(
             ErrorCode.NOT_FOUND));
-
-    // 찾아온 채팅방에 사용자가 속하는지 확인한다.
-    if (!chatroomDocument.getOrderId().equals(memberInfoDTO.getId())
-        && !chatroomDocument.getGuestId().equals(memberInfoDTO.getId())) {
-      throw new NotChatroomMemberException(ErrorCode.BAD_REQUEST);
-    }
-    // 채팅방 아이디로 페이지네이션이 적용된 채팅 메시지를 가져온다.
+    checkChatroom(chatRoomId, memberInfoDTO);
     Slice<MessageDocument> messageDocuments = messageDocumentRepository.findByChatroomId(
         chatroomDocument.getId(), pageable);
     Slice<ChatMessageSpecResponse> chatMessageSpecResponses = messageDocuments.map(
         ChatMessageSpecResponse::of);
     return ChatMessageResponse.of(chatMessageSpecResponses);
+  }
+
+  /**
+   * 특정 채팅방에서 나간다.
+   *
+   * @param memberInfoDTO
+   * @param chatroomLeaveRequest
+   */
+  public void leaveChatroom(MemberInfoDTO memberInfoDTO,
+      ChatroomLeaveRequest chatroomLeaveRequest) {
+    ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(
+            chatroomLeaveRequest.getChatroomId())
+        .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
+    checkChatroom(chatroomLeaveRequest.getChatroomId(), memberInfoDTO);
+    if (chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())) {
+      chatroomDocument.updateIsDeletedByOwner();
+    } else {
+      chatroomDocument.updateIsDeletedByGuest();
+    }
+    chatroomDocumentRepository.save(chatroomDocument);
   }
 
   /**
@@ -72,17 +99,34 @@ public class ChatroomService {
    */
   private ChatroomSpecResponse toChatroomSpecResponse(ChatroomDocument chatroomDocument,
       MemberInfoDTO memberInfoDTO) {
-//    Optional<MessageDocument> lastMessageOptional = messageDocumentRepository.findTopByChatroomId(
-//        chatroomDocument.getId());
     MessageDocument messageDocument = messageDocumentRepository.findTopByChatroomIdOrderByCreatedTimeDesc(
         chatroomDocument.getId());
-    String queueName = "room." + chatroomDocument.getId() + "." + memberInfoDTO.getEmail().split("@")[0];
+    String queueName =
+        "room." + chatroomDocument.getId() + "." + memberInfoDTO.getEmail().split("@")[0];
     AMQP.Queue.DeclareOk dok = rabbitTemplate.execute(
         channel -> channel.queueDeclare(queueName, true, false, false, new HashMap<>()));
-//    return ChatroomSpecResponse.of(chatroomDocument.getId(), lastMessageOptional,
-//        dok.getMessageCount());
-    return ChatroomSpecResponse.of(chatroomDocument.getId(), messageDocument,
-        dok.getMessageCount());
+    return ChatroomSpecResponse.of(chatroomDocument, messageDocument, dok.getMessageCount());
+  }
+
+  /**
+   * 사용자가 이전에 나갔던 채팅방은 아닌지 검증한다.
+   * 채팅방에 사용자가 주인이나 손님으로 존재하는지, 존재한다면 이전에 나가지는 않았는지 순으로 검증한다.
+   * @param chatroomId
+   * @param memberInfoDTO
+   */
+  private void checkChatroom(String chatroomId, MemberInfoDTO memberInfoDTO) {
+    ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomId)
+        .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
+    if (!chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())
+        && !chatroomDocument.getGuestId().equals(memberInfoDTO.getId())) {
+      throw new NotChatroomMemberException(ErrorCode.VALIDATION_ERROR);
+    }
+    if ((chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())
+        && chatroomDocument.isDeletedByOwner())
+        || (chatroomDocument.getGuestId().equals(memberInfoDTO.getId())
+        && chatroomDocument.isDeletedByGuest())) {
+      throw new ExitedChatroomException(ErrorCode.BAD_REQUEST);
+    }
   }
 
 }
