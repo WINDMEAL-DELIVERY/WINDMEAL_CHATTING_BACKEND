@@ -4,6 +4,7 @@ import static com.windmealchat.global.constants.RabbitConstants.CHAT_QUEUE_NAME;
 
 import com.windmealchat.alarm.dto.FcmNotificationRequest;
 import com.windmealchat.alarm.service.FcmNotificationService;
+import com.windmealchat.chat.dto.request.ChatInitialRequest;
 import com.windmealchat.chat.dto.request.MessageDTO;
 import com.windmealchat.chat.dto.response.ChatMessageResponse.ChatMessageSpecResponse;
 import com.windmealchat.chat.service.StompChatService;
@@ -28,12 +29,12 @@ public class StompChatController {
   private final TokenService tokenService;
 
   @MessageMapping(value = "chat.enter.{chatRoomId}")
-  public void enter(@DestinationVariable String chatRoomId, MessageDTO messageDTO, SimpMessageHeaderAccessor accessor) {
+  public void enter(@DestinationVariable String chatRoomId, ChatInitialRequest chatInitialRequest, SimpMessageHeaderAccessor accessor) {
     // 채팅방에 처음 사용자가 참가할때, SYSTEM 타입의 메세지를 전송해주는 컨트롤러
     Optional<MemberInfoDTO> memberInfoOptional = tokenService.resolveJwtToken(accessor);
     if(memberInfoOptional.isPresent()) {
-      sendNotification(messageDTO, tokenService.resolveAlarmToken(accessor));
-      stompChatService.enter(chatRoomId, messageDTO, memberInfoOptional.get());
+//      sendNotification(messageDTO, tokenService.resolveAlarmToken(accessor));
+      stompChatService.enter(chatRoomId, chatInitialRequest, memberInfoOptional.get());
     }
   }
 

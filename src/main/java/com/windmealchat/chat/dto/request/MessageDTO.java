@@ -14,12 +14,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MessageDTO {
+    private String oppositeEmail;
     private String chatRoomId;
     private MessageType type;
     private String message;
 
     public MessageDocument toDocument(MemberInfoDTO memberInfoDTO) {
         return new MessageDocument(this, memberInfoDTO);
+
     }
 
     public MessageDocument toDocument(String message) {
@@ -29,5 +31,6 @@ public class MessageDTO {
             .message(message)
             .build();
     }
+
 
 }
