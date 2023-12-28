@@ -10,6 +10,7 @@ import com.windmealchat.global.token.impl.TokenProvider;
 import com.windmealchat.global.util.AES256Util;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -32,6 +33,9 @@ import static com.windmealchat.global.constants.StompConstants.*;
 @RequiredArgsConstructor
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Value("${spring.rabbitmq.host}")
+    private String host;
 
     private final AES256Util aes256Util;
     private final ObjectMapper objectMapper;
@@ -71,7 +75,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         messageBrokerRegistry.setPathMatcher(new AntPathMatcher("."));
         messageBrokerRegistry.setApplicationDestinationPrefixes(PUB_PREFIX);
 //        messageBrokerRegistry.enableSimpleBroker(SUB_PREFIX);
-        messageBrokerRegistry.enableStompBrokerRelay(QUEUE, TOPIC, EXCHANGE, AMQ_QUEUE);
+        messageBrokerRegistry.enableStompBrokerRelay(QUEUE, TOPIC, EXCHANGE, AMQ_QUEUE)
+            .setRelayHost(host)
+            .setVirtualHost("/")
+            .setRelayPort(61613);
     }
 
     @Override

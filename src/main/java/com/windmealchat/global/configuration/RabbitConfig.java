@@ -16,13 +16,18 @@ import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableRabbit
 public class RabbitConfig {
+
+  @Value("${spring.rabbitmq.host}")
+  private String host;
 
   //Queue 등록
   @Bean
@@ -47,14 +52,6 @@ public class RabbitConfig {
 //    return rabbitTemplate;
 //  }
 
-//  @Bean
-//  public SimpleMessageListenerContainer container(){
-//    SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
-//    container.setConnectionFactory(connectionFactory());
-//    container.setQueueNames(CHAT_QUEUE_NAME);
-//    container.setMessageListener(null);
-//    return container;
-//  }
 
   //Spring에서 자동생성해주는 ConnectionFactory는 SimpleConnectionFactory인가? 그건데
   //여기서 사용하는 건 CachingConnectionFacotry라 새로 등록해줌
@@ -78,7 +75,7 @@ public class RabbitConfig {
   @Bean
   public ConnectionFactory connectionFactory() {
     CachingConnectionFactory factory = new CachingConnectionFactory();
-    factory.setHost("localhost");
+    factory.setHost(host);
     factory.setPort(5672);
     factory.setVirtualHost("/");
     factory.setUsername("guest");
