@@ -38,7 +38,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private String host;
 
     private final AES256Util aes256Util;
-    private final ObjectMapper objectMapper;
     private final RedisTemplate redisTemplate;
     private final TokenProvider tokenProvider;
 
@@ -49,7 +48,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Bean
     public ChannelInterceptor channelInterceptor() {
-        return new ClientInboundChannelHandler(tokenProvider, objectMapper);
+        return new ClientInboundChannelHandler(tokenProvider);
     }
 
     @Bean

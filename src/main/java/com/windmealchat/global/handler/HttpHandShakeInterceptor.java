@@ -36,7 +36,6 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
   @Override
   public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
       WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
-    log.error("소켓 연결 수신됨");
     if (request instanceof ServletServerHttpRequest) {
       ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) request;
       HttpServletRequest servletRequest = servletServerHttpRequest.getServletRequest();
@@ -45,15 +44,12 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
         String alarmToken = resolveToken(servletRequest, CODE_A).get();
         Optional<MemberInfoDTO> memberInfoDTO = resolveMemberInfo(token);
         if (memberInfoDTO.isPresent()) {
-          log.error("memberInfo 존재");
-          log.error(memberInfoDTO.get().getEmail());
           String key =
               PREFIX_REFRESHTOKEN + memberInfoDTO.get().getId() + memberInfoDTO.get().getEmail();
           Optional<String> refreshToken = refreshTokenDAO.getRefreshToken(aes256Util.encrypt(key));
           if (refreshToken.isPresent()) {
             attributes.put(TOKEN, token);
             attributes.put(ALARM_TOKEN, alarmToken);
-            log.error("연결 성공");
             return true;
           }
         }
@@ -72,8 +68,7 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
     log.info("Handshake 완료");
   }
 
-  private Optional<String> resolveToken(HttpServletRequest servletRequest, String type)
-      throws Exception {
+  private Optional<String> resolveToken(HttpServletRequest servletRequest, String type) {
     String queryString = servletRequest.getParameter(type);
     return aes256Util.decrypt(queryString);
   }

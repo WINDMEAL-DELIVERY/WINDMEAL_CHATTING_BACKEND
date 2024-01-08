@@ -27,7 +27,6 @@ import static com.windmealchat.global.constants.TokenConstants.TOKEN;
 public class ClientInboundChannelHandler implements ChannelInterceptor {
 
   private final TokenProvider tokenProvider;
-  private final ObjectMapper objectMapper;
 
   /*
    * 웹소켓 연결을 맺은 클라이언트가 메세지를 보내기 전에, 권한이 있는지 체크하는 과정이다.
@@ -38,7 +37,7 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
    */
   @Override
   public Message<?> preSend(Message<?> message, MessageChannel channel) {
-    boolean isValid = false;
+    boolean isValid;
     try {
       isValid = TokenProcessing(message);
     } catch (JsonProcessingException e) {
@@ -61,7 +60,6 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
       Optional<MemberInfoDTO> memberInfoFromToken = tokenProvider.getMemberInfoFromToken(
           accessToken);
       if (memberInfoFromToken.isPresent()) {
-        // TODO disconnect 시점에 큐를 삭제하는 로직도 추가해야 함
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
           MemberInfoDTO memberInfoDTO = memberInfoFromToken.get();
           accessor.setUser(new SimpleUserPrincipal(memberInfoDTO.getId(),

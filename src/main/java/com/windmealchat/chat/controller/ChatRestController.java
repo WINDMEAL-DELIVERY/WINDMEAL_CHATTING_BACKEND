@@ -42,14 +42,16 @@ public class ChatRestController {
   }
 
   @GetMapping("/chatroom")
-  public ResultDataResponseDTO<ChatroomResponse> chatroomList(Pageable pageable, HttpServletRequest request) {
+  public ResultDataResponseDTO<ChatroomResponse> chatroomList(Pageable pageable,
+      HttpServletRequest request) {
     MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
     ChatroomResponse chatrooms = chatroomService.getChatrooms(memberInfoDTO, pageable);
     return ResultDataResponseDTO.of(chatrooms);
   }
 
   @PostMapping("/chatroom")
-  public ResultDataResponseDTO leaveChatroom(@RequestBody ChatroomLeaveRequest chatroomLeaveRequest, HttpServletRequest request) {
+  public ResultDataResponseDTO leaveChatroom(@RequestBody ChatroomLeaveRequest chatroomLeaveRequest,
+      HttpServletRequest request) {
     MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
     chatroomService.leaveChatroom(memberInfoDTO, chatroomLeaveRequest);
     return ResultDataResponseDTO.empty();
@@ -59,7 +61,7 @@ public class ChatRestController {
     String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
     String result = null;
     if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
-      result =  bearerToken.substring(7);
+      result = bearerToken.substring(7);
     }
     return Optional.ofNullable(result);
   }
