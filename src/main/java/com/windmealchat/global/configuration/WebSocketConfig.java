@@ -48,7 +48,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Bean
     public ChannelInterceptor channelInterceptor() {
-        return new ClientInboundChannelHandler(tokenProvider);
+        return new ClientInboundChannelHandler(tokenProvider, aes256Util);
     }
 
     @Bean

@@ -1,6 +1,7 @@
 package com.windmealchat.chat.service;
 
 import static com.windmealchat.global.constants.StompConstants.SYSTEM_GREETING;
+import static com.windmealchat.global.constants.TokenConstants.AUTHORIZATION_HEADER;
 
 import com.windmealchat.chat.domain.ChatroomDocument;
 import com.windmealchat.chat.domain.MessageDocument;
@@ -41,15 +42,16 @@ public class StompChatService {
     if (chatroomDocument.isDeletedByGuest() || chatroomDocument.isDeletedByOwner()) {
       throw new ExitedChatroomException(ErrorCode.BAD_REQUEST);
     }
-    // 상대방의 큐를 생성한다.
-    rabbitService.createQueue(chatroomId, chatInitialRequest);
+
     messageDocumentRepository.save(systemMessageDocument);
+    rabbitService.createQueue(chatroomId, chatInitialRequest);
     // 메시지를 각각 전송한다.
     rabbitService.sendMessage(chatroomId, memberInfoDTO.getEmail(), systemMessageSpecResponse);
     rabbitService.sendMessage(chatroomId, chatInitialRequest.getOppositeEmail(), systemMessageSpecResponse);
   }
 
   public void sendMessage(String chatroomId, MessageDTO messageDTO, MemberInfoDTO memberInfoDTO) {
+
     MessageDocument messageDocument = messageDTO.toDocument(memberInfoDTO);
     ChatMessageSpecResponse chatMessageSpecResponse = ChatMessageSpecResponse.of(messageDocument);
     chatroomDocumentRepository.findById(chatroomId).orElseThrow(() -> new ChatroomNotFoundException(

@@ -17,6 +17,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 @Slf4j
@@ -30,7 +31,7 @@ public class StompChatController {
 
   @MessageMapping(value = "chat.enter.{chatRoomId}")
   public void enter(@DestinationVariable String chatRoomId, ChatInitialRequest chatInitialRequest,
-      SimpMessageHeaderAccessor accessor) {
+      StompHeaderAccessor accessor) {
     Optional<MemberInfoDTO> memberInfoOptional = tokenService.resolveJwtToken(accessor);
     if (memberInfoOptional.isPresent()) {
       stompChatService.enter(chatRoomId, chatInitialRequest, memberInfoOptional.get());
@@ -39,7 +40,7 @@ public class StompChatController {
 
   @MessageMapping(value = "chat.message.{chatRoomId}")
   public void sendMessage(@DestinationVariable String chatRoomId, MessageDTO messageDTO,
-      SimpMessageHeaderAccessor accessor) {
+      StompHeaderAccessor accessor) {
     Optional<MemberInfoDTO> memberInfoOptional = tokenService.resolveJwtToken(accessor);
     String alarmToken = tokenService.resolveAlarmToken(accessor);
     if (memberInfoOptional.isPresent()) {

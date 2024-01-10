@@ -15,6 +15,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -30,7 +31,7 @@ public class TokenService {
     return (String) session.get(ALARM_TOKEN);
   }
 
-  public Optional<MemberInfoDTO> resolveJwtToken(SimpMessageHeaderAccessor accessor) {
+  public Optional<MemberInfoDTO> resolveJwtToken(StompHeaderAccessor accessor) {
     Map<String, Object> session = accessor.getSessionAttributes();
     String accessToken = (String) session.get(TOKEN);
     Optional<MemberInfoDTO> result;
