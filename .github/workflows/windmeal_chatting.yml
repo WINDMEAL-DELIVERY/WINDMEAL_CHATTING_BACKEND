@@ -24,6 +24,19 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
 
+    - name: make firebase.json
+      run: |
+        cd ./src/main/resources/firebase
+        touch ./windmeal-firebase-adminsdk.json
+        
+    - name: create-json
+      id: create-json
+      uses: jsdaniell/create-json@1.1.2
+      with:
+        name: "windmeal-firebase-adminsdk.json"
+        json: ${{ secrets.FIREBASE_KEY }}
+        dir: 'src/main/resources/firebase'
+
     - name: make application.yml
       run: |
         mkdir ./src/main/resources 
