@@ -24,6 +24,20 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
 
+    - name: make application.yml
+      run: |
+        mkdir ./src/main/resources 
+        mkdir ./src/main/resources/firebase
+        cd ./src/main/resources
+        
+        touch ./application.yml
+        touch ./key.yml
+        
+        echo "${{ secrets.CHAT_APPLICATION }}" >> ./application.yml
+        echo "${{ secrets.CHAT_KEY }}" >> ./key.yml
+        
+      shell: bash
+
     - name: make firebase.json
       run: |
         cd ./src/main/resources/firebase
@@ -36,19 +50,6 @@ jobs:
         name: "windmeal-firebase-adminsdk.json"
         json: ${{ secrets.FIREBASE_KEY }}
         dir: 'src/main/resources/firebase'
-
-    - name: make application.yml
-      run: |
-        mkdir ./src/main/resources 
-        cd ./src/main/resources
-        
-        touch ./application.yml
-        touch ./key.yml
-        
-        echo "${{ secrets.CHAT_APPLICATION }}" >> ./application.yml
-        echo "${{ secrets.CHAT_KEY }}" >> ./key.yml
-        
-      shell: bash
 
     - name: Build with Gradle
       run: |
