@@ -23,6 +23,10 @@ public class ChatroomDocument {
 
   private Long orderId;
 
+  private String ownerAlarmToken;
+
+  private String guestAlarmToken;
+
   private boolean isDeletedByOwner = false;
 
   private boolean isDeletedByGuest = false;
@@ -31,13 +35,16 @@ public class ChatroomDocument {
   private LocalDateTime createdTime;
 
   @Builder
-  public ChatroomDocument(String id, Long ownerId, Long guestId, Long orderId) {
+  public ChatroomDocument(String id, Long ownerId, Long guestId, Long orderId,
+      String ownerAlarmToken, String guestAlarmToken) {
     this.id = id;
     this.ownerId = ownerId;
     this.guestId = guestId;
     this.orderId = orderId;
     this.isDeletedByOwner = false;
     this.isDeletedByGuest = false;
+    this.ownerAlarmToken = ownerAlarmToken;
+    this.guestAlarmToken = guestAlarmToken;
   }
 
   public void updateIsDeletedByOwner() {

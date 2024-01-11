@@ -30,11 +30,12 @@ public class ChatroomService {
 
   private final ChatroomDocumentRepository chatroomDocumentRepository;
   private final MessageDocumentRepository messageDocumentRepository;
-  private final RabbitTemplate rabbitTemplate;
+  private final RabbitService rabbitService;
 
 
   /**
    * 요청자가 속한 채팅방을 페이지네이션을 적용하여 조회한다. 채팅방의 정보와 더불어 사용자가 읽지 않은 채팅의 수, 마지막 채팅 메시지를 조회한다.
+   *
    * @param memberInfoDTO
    * @param pageable
    * @return
@@ -86,6 +87,8 @@ public class ChatroomService {
       chatroomDocument.updateIsDeletedByGuest();
     }
     chatroomDocumentRepository.save(chatroomDocument);
+    // rabbitmq queue 나가기
+    rabbitService.deleteQueue(buildQueueName(chatroomDocument, memberInfoDTO));
   }
 
   /**
@@ -101,16 +104,17 @@ public class ChatroomService {
       MemberInfoDTO memberInfoDTO) {
     MessageDocument messageDocument = messageDocumentRepository.findTopByChatroomIdOrderByCreatedTimeDesc(
         chatroomDocument.getId());
-    String queueName =
-        "room." + chatroomDocument.getId() + "." + memberInfoDTO.getEmail().split("@")[0];
-    AMQP.Queue.DeclareOk dok = rabbitTemplate.execute(
-        channel -> channel.queueDeclare(queueName, true, false, false, new HashMap<>()));
-    return ChatroomSpecResponse.of(chatroomDocument, messageDocument, dok.getMessageCount());
+    int queueMessageCount = rabbitService.getQueueMessages(
+        buildQueueName(chatroomDocument, memberInfoDTO));
+    String oppositeAlarmToken = memberInfoDTO.getId().equals(chatroomDocument.getOwnerId())
+        ? chatroomDocument.getOwnerAlarmToken() : chatroomDocument.getGuestAlarmToken();
+    return ChatroomSpecResponse.of(chatroomDocument, messageDocument, queueMessageCount,
+        oppositeAlarmToken);
   }
 
   /**
-   * 사용자가 이전에 나갔던 채팅방은 아닌지 검증한다.
-   * 채팅방에 사용자가 주인이나 손님으로 존재하는지, 존재한다면 이전에 나가지는 않았는지 순으로 검증한다.
+   * 사용자가 이전에 나갔던 채팅방은 아닌지 검증한다. 채팅방에 사용자가 주인이나 손님으로 존재하는지, 존재한다면 이전에 나가지는 않았는지 순으로 검증한다.
+   *
    * @param chatroomId
    * @param memberInfoDTO
    */
@@ -127,6 +131,10 @@ public class ChatroomService {
         && chatroomDocument.isDeletedByGuest())) {
       throw new ExitedChatroomException(ErrorCode.BAD_REQUEST);
     }
+  }
+
+  private String buildQueueName(ChatroomDocument chatroomDocument, MemberInfoDTO memberInfoDTO) {
+    return "room." + chatroomDocument.getId() + "." + memberInfoDTO.getEmail().split("@")[0];
   }
 
 }
