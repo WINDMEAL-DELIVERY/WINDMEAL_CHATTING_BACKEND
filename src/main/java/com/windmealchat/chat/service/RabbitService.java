@@ -1,7 +1,11 @@
 package com.windmealchat.chat.service;
 
+import com.rabbitmq.client.AMQP;
 import com.windmealchat.chat.dto.request.ChatInitialRequest;
 import com.windmealchat.chat.dto.response.ChatMessageResponse.ChatMessageSpecResponse;
+import com.windmealchat.chat.exception.CanNotDeleteQueueException;
+import com.windmealchat.global.exception.ErrorCode;
+import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpAdmin;
@@ -28,5 +32,17 @@ public class RabbitService {
     rabbitTemplate.convertAndSend(
         "room." + chatroomId + "." + email.split("@")[0],
         messageSpecResponse);
+  }
+
+  public int getQueueMessages(String queueName) {
+    AMQP.Queue.DeclareOk dok = rabbitTemplate.execute(
+        channel -> channel.queueDeclare(queueName, true, false, false, new HashMap<>()));
+    return dok.getMessageCount();
+  }
+
+  public void deleteQueue(String queueName) {
+    if(!admin.deleteQueue(queueName)) {
+      throw new CanNotDeleteQueueException(ErrorCode.INTERNAL_ERROR);
+    }
   }
 }

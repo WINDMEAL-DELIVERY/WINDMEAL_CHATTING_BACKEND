@@ -2,14 +2,22 @@ package com.windmealchat.global.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.windmealchat.chat.dto.request.MessageDTO;
+import com.windmealchat.chat.dto.response.ChatMessageResponse.ChatMessageSpecResponse;
+import com.windmealchat.chat.dto.response.ChatroomResponse.ChatroomSpecResponse;
 import com.windmealchat.global.auth.SimpleUserPrincipal;
 import com.windmealchat.global.token.impl.TokenProvider;
+import com.windmealchat.global.util.AES256Util;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageDeliveryException;
+import org.springframework.messaging.converter.CompositeMessageConverter;
+import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -17,6 +25,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import org.springframework.util.StringUtils;
 
 import static com.windmealchat.global.constants.TokenConstants.AUTHORIZATION_HEADER;
 import static com.windmealchat.global.constants.TokenConstants.TOKEN;
@@ -26,7 +35,9 @@ import static com.windmealchat.global.constants.TokenConstants.TOKEN;
 @RequiredArgsConstructor
 public class ClientInboundChannelHandler implements ChannelInterceptor {
 
+  private final MessageConverter compositeMessageConverter;
   private final TokenProvider tokenProvider;
+  private final AES256Util aes256Util;
 
   /*
    * 웹소켓 연결을 맺은 클라이언트가 메세지를 보내기 전에, 권한이 있는지 체크하는 과정이다.
@@ -49,14 +60,21 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
   private boolean TokenProcessing(Message<?> message) throws JsonProcessingException {
     StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message,
         StompHeaderAccessor.class);
-    log.error("커맨드 타입 : " + accessor.getCommand());
-
+//    log.error("커맨드 타입 : " + accessor.getCommand());
+    // 메시지 브로커를 쓰면 여기서 페이로드가 비어있나?
+//    ChatMessageSpecResponse chatMessageSpecResponse = (ChatMessageSpecResponse) compositeMessageConverter.fromMessage(
+//        message, ChatMessageSpecResponse.class);
+//    log.error(chatMessageSpecResponse.getMessage());
     if (StompCommand.CONNECT.equals(accessor.getCommand()) || StompCommand.SUBSCRIBE.equals(
         accessor.getCommand())) {
-      // 이 세션은 HandshakeInterceptor 혹은 이를 상속받은 클래스에서 핸드쉐이크 과정 중간에 난입하여 얻은 토큰 정보 등을 저장해둔 곳이다.
       Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
       String accessToken = (String) sessionAttributes.get(TOKEN);
-      // CONNECT 명령의 경우
+      String authorizationHeader = accessor.getNativeHeader(AUTHORIZATION_HEADER).get(0);
+      String decrypt = aes256Util.decrypt(authorizationHeader)
+          .orElseThrow(() -> new MessageDeliveryException("인증 헤더가 존재하지 않습니다."));
+      if (!decrypt.equals(accessToken)) {
+        throw new MessageDeliveryException("인증 헤더와 토큰이 일치하지 않습니다.");
+      }
       Optional<MemberInfoDTO> memberInfoFromToken = tokenProvider.getMemberInfoFromToken(
           accessToken);
       if (memberInfoFromToken.isPresent()) {
@@ -69,7 +87,6 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
       }
       return false;
     }
-    // 다른 명령어라면 통과
     return true;
   }
 }

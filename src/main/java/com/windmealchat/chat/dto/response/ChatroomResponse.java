@@ -28,19 +28,20 @@ public class ChatroomResponse {
     private MessageType messageType;
     private LocalDateTime createdDate;
     private int uncheckedMessageCount;
+    private String oppositeAlarmToken;
 
     private ChatroomSpecResponse(String chatroomId, String lastMessage, MessageType messageType,
-        LocalDateTime createdDate,
-        int uncheckedMessageCount) {
+        LocalDateTime createdDate, int uncheckedMessageCount, String oppositeAlarmToken) {
       this.chatroomId = chatroomId;
       this.lastMessage = lastMessage;
       this.messageType = messageType;
       this.createdDate = createdDate;
+      this.oppositeAlarmToken = oppositeAlarmToken;
       this.uncheckedMessageCount = uncheckedMessageCount;
     }
 
     public static ChatroomSpecResponse of(ChatroomDocument chatroomDocument,
-        MessageDocument messageDocument, int uncheckedMessageCount) {
+        MessageDocument messageDocument, int uncheckedMessageCount, String oppositeAlarmToken) {
       String lastMessage = messageDocument != null ? messageDocument.getMessage() : "";
       // 마지막으로 전송된 메시지가 없어서 전송 시간을 표시할 수 없는 경우는 채팅방이 생성된 시간을 대신 반환한다.
       // 디펜시브다. 채팅방 입장과 동시에 시스템 메시지가 전송되기 때문에 메시지가 비어있을 일은 없다.
@@ -49,8 +50,7 @@ public class ChatroomResponse {
       MessageType lastMessageType =
           messageDocument != null ? messageDocument.getMessageType() : MessageType.SYSTEM;
       return new ChatroomSpecResponse(chatroomDocument.getId(), lastMessage, lastMessageType,
-          createdTime,
-          uncheckedMessageCount);
+          createdTime, uncheckedMessageCount, oppositeAlarmToken);
     }
   }
 }
