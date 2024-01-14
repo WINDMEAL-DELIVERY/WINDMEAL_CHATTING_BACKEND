@@ -1,42 +1,40 @@
 package com.windmealchat.global.handler;
 
+import static com.windmealchat.global.constants.TokenConstants.ALARM_TOKEN;
+import static com.windmealchat.global.constants.TokenConstants.AUTHORIZATION_HEADER;
+import static com.windmealchat.global.constants.TokenConstants.TOKEN;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.windmealchat.alarm.dto.FcmNotificationRequest;
+import com.windmealchat.alarm.service.FcmNotificationService;
 import com.windmealchat.chat.dto.request.MessageDTO;
-import com.windmealchat.chat.dto.response.ChatMessageResponse.ChatMessageSpecResponse;
-import com.windmealchat.chat.dto.response.ChatroomResponse.ChatroomSpecResponse;
 import com.windmealchat.global.auth.SimpleUserPrincipal;
 import com.windmealchat.global.token.impl.TokenProvider;
 import com.windmealchat.global.util.AES256Util;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageDeliveryException;
-import org.springframework.messaging.converter.CompositeMessageConverter;
-import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-import org.springframework.util.StringUtils;
-
-import static com.windmealchat.global.constants.TokenConstants.AUTHORIZATION_HEADER;
-import static com.windmealchat.global.constants.TokenConstants.TOKEN;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ClientInboundChannelHandler implements ChannelInterceptor {
 
-  private final MessageConverter compositeMessageConverter;
+  private final FcmNotificationService fcmNotificationService;
   private final TokenProvider tokenProvider;
+  private final ObjectMapper objectMapper;
   private final AES256Util aes256Util;
 
   /*
@@ -50,21 +48,44 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
   public Message<?> preSend(Message<?> message, MessageChannel channel) {
     boolean isValid;
     try {
-      isValid = TokenProcessing(message);
+      isValid = stompFilter(message);
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
     return isValid ? message : null;
   }
 
-  private boolean TokenProcessing(Message<?> message) throws JsonProcessingException {
+  /**
+   * 메시지 전송이 성공한 경우에만 알람을 발생시킨다.
+   * @param message
+   * @param channel
+   * @param sent
+   */
+  @Override
+  public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
+
+    if(!sent)
+      return;
+
+    StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+    if(StompCommand.SEND.equals(accessor.getCommand())) {
+      Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+      String alarmToken = (String) sessionAttributes.get(ALARM_TOKEN);
+      String serializedMessageDTO = new String((byte[]) message.getPayload(), StandardCharsets.UTF_8);
+
+      try{
+        MessageDTO messageDTO = objectMapper.readValue(serializedMessageDTO, MessageDTO.class);
+        log.info(messageDTO.getMessage());
+        sendNotification(messageDTO, alarmToken);
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  private boolean stompFilter(Message<?> message) throws JsonProcessingException {
     StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message,
         StompHeaderAccessor.class);
-//    log.error("커맨드 타입 : " + accessor.getCommand());
-    // 메시지 브로커를 쓰면 여기서 페이로드가 비어있나?
-//    ChatMessageSpecResponse chatMessageSpecResponse = (ChatMessageSpecResponse) compositeMessageConverter.fromMessage(
-//        message, ChatMessageSpecResponse.class);
-//    log.error(chatMessageSpecResponse.getMessage());
     if (StompCommand.CONNECT.equals(accessor.getCommand()) || StompCommand.SUBSCRIBE.equals(
         accessor.getCommand())) {
       Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
@@ -88,5 +109,11 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
       return false;
     }
     return true;
+  }
+
+  private void sendNotification(MessageDTO messageDTO, String token) {
+    fcmNotificationService.sendNotification(
+        FcmNotificationRequest.of("CHATTING", messageDTO.getMessage()),
+        token);
   }
 }
