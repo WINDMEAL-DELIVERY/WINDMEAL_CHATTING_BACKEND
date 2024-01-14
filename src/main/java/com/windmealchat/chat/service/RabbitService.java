@@ -20,10 +20,9 @@ public class RabbitService {
   private final RabbitTemplate rabbitTemplate;
   private final AmqpAdmin admin;
 
-  public void createQueue(String chatroomId, ChatInitialRequest request) {
+  public void createQueue(String chatroomId, String oppositeEmail) {
     String queueName =
-        "room." + chatroomId + "." + request.getOppositeEmail()
-            .split("@")[0];
+        "room." + chatroomId + "." + oppositeEmail.split("@")[0];
     Queue queue = new Queue(queueName, true, false, false, null);
     admin.declareQueue(queue);
   }

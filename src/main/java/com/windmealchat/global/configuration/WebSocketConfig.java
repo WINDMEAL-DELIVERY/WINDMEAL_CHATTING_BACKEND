@@ -6,6 +6,8 @@ import static com.windmealchat.global.constants.StompConstants.PUB_PREFIX;
 import static com.windmealchat.global.constants.StompConstants.QUEUE;
 import static com.windmealchat.global.constants.StompConstants.TOPIC;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.windmealchat.alarm.service.FcmNotificationService;
 import com.windmealchat.global.handler.ClientInboundChannelHandler;
 import com.windmealchat.global.handler.HttpHandShakeInterceptor;
 import com.windmealchat.global.handler.StompErrorHandler;
@@ -47,8 +49,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
   private String ws_host;
 
   private final AES256Util aes256Util;
+  private final ObjectMapper objectMapper;
   private final RedisTemplate redisTemplate;
   private final TokenProvider tokenProvider;
+  private final FcmNotificationService fcmNotificationService;
 
   @Bean
   public RefreshTokenDAO refreshTokenDAO() {
@@ -57,7 +61,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   @Bean
   public ChannelInterceptor channelInterceptor() {
-    return new ClientInboundChannelHandler(compositeMessageConverter(), tokenProvider, aes256Util);
+    return new ClientInboundChannelHandler(fcmNotificationService, tokenProvider, objectMapper, aes256Util);
   }
 
   @Bean
@@ -68,15 +72,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
   @Bean
   public HandshakeInterceptor HttpHandShakeInterceptor() {
     return new HttpHandShakeInterceptor(aes256Util, tokenProvider, refreshTokenDAO());
-  }
-
-  @Bean
-  public MessageConverter compositeMessageConverter() {
-    // 일단 MappingJackson2MessageConverter만 포함하겠다.
-    List<MessageConverter> converters = List.of(
-        new MappingJackson2MessageConverter()
-    );
-    return new CompositeMessageConverter(converters);
   }
 
   @Override
