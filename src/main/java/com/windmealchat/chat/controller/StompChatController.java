@@ -5,6 +5,8 @@ import static com.windmealchat.global.constants.RabbitConstants.CHAT_QUEUE_NAME;
 import com.windmealchat.chat.dto.request.MessageDTO;
 import com.windmealchat.chat.dto.response.ChatMessageResponse.ChatMessageSpecResponse;
 import com.windmealchat.chat.service.StompChatService;
+import com.windmealchat.global.exception.ErrorCode;
+import com.windmealchat.global.exception.GeneralException;
 import com.windmealchat.global.token.service.TokenService;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
 import java.util.Optional;

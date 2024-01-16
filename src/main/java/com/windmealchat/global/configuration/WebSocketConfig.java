@@ -71,14 +71,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   @Bean
   public HandshakeInterceptor HttpHandShakeInterceptor() {
-    return new HttpHandShakeInterceptor(aes256Util, tokenProvider, refreshTokenDAO());
+    return new HttpHandShakeInterceptor(aes256Util,objectMapper, tokenProvider, refreshTokenDAO());
   }
 
   @Override
   public void configureMessageBroker(MessageBrokerRegistry messageBrokerRegistry) {
     messageBrokerRegistry.setPathMatcher(new AntPathMatcher("."));
     messageBrokerRegistry.setApplicationDestinationPrefixes(PUB_PREFIX);
-//        messageBrokerRegistry.enableSimpleBroker(SUB_PREFIX);
     messageBrokerRegistry.enableStompBrokerRelay(QUEUE, TOPIC, EXCHANGE, AMQ_QUEUE)
         .setRelayHost(host)
         .setVirtualHost("/")
