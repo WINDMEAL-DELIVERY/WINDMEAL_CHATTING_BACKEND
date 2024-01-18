@@ -7,27 +7,19 @@ import static com.windmealchat.global.constants.TokenConstants.PREFIX_REFRESHTOK
 import static com.windmealchat.global.constants.TokenConstants.TOKEN;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.windmealchat.chat.exception.AuthorizationException;
-import com.windmealchat.global.exception.ErrorCode;
-import com.windmealchat.global.exception.ExceptionResponseDTO;
 import com.windmealchat.global.token.dao.RefreshTokenDAO;
 import com.windmealchat.global.token.impl.TokenProvider;
 import com.windmealchat.global.util.AES256Util;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
-import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
-import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.socket.WebSocketHandler;
-import org.springframework.web.socket.server.HandshakeFailureException;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 @Slf4j

@@ -31,14 +31,11 @@ public class StompErrorHandler extends StompSubProtocolErrorHandler {
     accessor.setLeaveMutable(true);
     StompHeaderAccessor clientHeaderAccessor = null;
     if (clientMessage != null) {
-      log.info("1 :" + new String((byte[]) clientMessage.getPayload()));
       clientHeaderAccessor = MessageHeaderAccessor.getAccessor(clientMessage,
           StompHeaderAccessor.class);
       if (clientHeaderAccessor != null) {
-        log.info("2");
         String receiptId = clientHeaderAccessor.getReceipt();
         if (receiptId != null) {
-          log.info("3");
           accessor.setReceiptId(receiptId);
         }
       }

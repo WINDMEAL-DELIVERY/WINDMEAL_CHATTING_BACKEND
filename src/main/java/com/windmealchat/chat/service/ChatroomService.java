@@ -15,12 +15,16 @@ import com.windmealchat.chat.repository.ChatroomDocumentRepository;
 import com.windmealchat.chat.repository.MessageDocumentRepository;
 import com.windmealchat.global.exception.ErrorCode;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -34,18 +38,20 @@ public class ChatroomService {
 
 
   /**
-   * 요청자가 속한 채팅방을 페이지네이션을 적용하여 조회한다. 채팅방의 정보와 더불어 사용자가 읽지 않은 채팅의 수, 마지막 채팅 메시지를 조회한다.
-   *
-   * @param memberInfoDTO
+   * 요청자가 속한 채팅방을 페이지네이션을 적용하여 조회한다. <br/>
+   * 채팅방의 정보와 더불어 사용자가 읽지 않은 채팅의 수, 마지막 채팅 메시지를 조회한다.
    * @param pageable
    * @return
    */
   public ChatroomResponse getChatrooms(MemberInfoDTO memberInfoDTO, Pageable pageable) {
-    Slice<ChatroomDocument> chatroomDocumentSlice = chatroomDocumentRepository.findActiveChatrooms(
-        memberInfoDTO.getId(), memberInfoDTO.getId(), pageable);
-    Slice<ChatroomSpecResponse> map = chatroomDocumentSlice.map(
-        chatroomDocument -> toChatroomSpecResponse(chatroomDocument, memberInfoDTO));
-    return ChatroomResponse.of(map);
+    List<ChatroomDocument> activeChatrooms = chatroomDocumentRepository.findAllActiveChatrooms(
+        memberInfoDTO.getId(), memberInfoDTO.getId());
+    List<ChatroomSpecResponse> chatroomSpecResponses = activeChatrooms.stream()
+        .map(chatroomDocument -> toChatroomSpecResponse(chatroomDocument, memberInfoDTO)).sorted()
+        .collect(Collectors.toList());
+    Slice<ChatroomSpecResponse> ChatroomSpecResponseSlice = new SliceImpl<>(chatroomSpecResponses, pageable,
+        chatroomSpecResponses.size() > pageable.getPageSize() * pageable.getPageNumber());
+    return ChatroomResponse.of(ChatroomSpecResponseSlice);
   }
 
   /**
