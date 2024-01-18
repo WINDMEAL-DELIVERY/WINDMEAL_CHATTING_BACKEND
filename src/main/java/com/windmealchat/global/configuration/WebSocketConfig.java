@@ -71,7 +71,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   @Bean
   public HandshakeInterceptor HttpHandShakeInterceptor() {
-    return new HttpHandShakeInterceptor(aes256Util,objectMapper, tokenProvider, refreshTokenDAO());
+    return new HttpHandShakeInterceptor(aes256Util, tokenProvider, refreshTokenDAO());
   }
 
   @Override

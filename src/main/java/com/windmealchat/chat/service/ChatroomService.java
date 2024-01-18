@@ -1,6 +1,5 @@
 package com.windmealchat.chat.service;
 
-import com.rabbitmq.client.AMQP;
 import com.windmealchat.chat.domain.ChatroomDocument;
 import com.windmealchat.chat.domain.MessageDocument;
 import com.windmealchat.chat.dto.request.ChatroomLeaveRequest;
@@ -15,13 +14,10 @@ import com.windmealchat.chat.repository.ChatroomDocumentRepository;
 import com.windmealchat.chat.repository.MessageDocumentRepository;
 import com.windmealchat.global.exception.ErrorCode;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
