@@ -27,7 +27,6 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 public class HttpHandShakeInterceptor implements HandshakeInterceptor {
 
   private final AES256Util aes256Util;
-  private final ObjectMapper objectMapper;
   private final TokenProvider tokenProvider;
   private final RefreshTokenDAO refreshTokenDAO;
 

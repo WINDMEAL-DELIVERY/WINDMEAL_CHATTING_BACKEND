@@ -72,7 +72,8 @@ public class ChatRestController {
       @ApiResponse(responseCode = "401", description = "유효하지 않은 엑세스 토큰입니다.",
           content = @Content(schema = @Schema(implementation = ExceptionResponseDTO.class))),
   })
-  public ResultDataResponseDTO<ChatroomResponse> chatroomList(Pageable pageable,
+  public ResultDataResponseDTO<ChatroomResponse> chatroomList(
+      Pageable pageable,
       HttpServletRequest request) {
     MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
     ChatroomResponse chatrooms = chatroomService.getChatrooms(memberInfoDTO, pageable);

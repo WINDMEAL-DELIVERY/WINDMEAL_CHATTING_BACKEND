@@ -3,11 +3,13 @@ package com.windmealchat.chat.dto.response;
 import com.windmealchat.chat.domain.ChatroomDocument;
 import com.windmealchat.chat.domain.MessageDocument;
 import com.windmealchat.chat.domain.MessageType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import org.springframework.data.domain.Slice;
 
 @Getter
+@Schema(title = "채팅방 페이지네이션 응답")
 public class ChatroomResponse {
 
   private final Slice<ChatroomSpecResponse> chatroomSpecResponses;
@@ -21,13 +23,20 @@ public class ChatroomResponse {
   }
 
   @Getter
-  public static class ChatroomSpecResponse implements Comparable<ChatroomSpecResponse>{
+  @Schema(title = "채팅방 세부 정보")
+  public static class ChatroomSpecResponse implements Comparable<ChatroomSpecResponse> {
 
+    @Schema(description = "채팅방 아이디", example = "65a8c06b58fdc8725d6b10b1")
     private String chatroomId;
+    @Schema(description = "마지막 메시지", example = "아니 피자를 어떻게 실수로 다 먹어요??")
     private String lastMessage;
+    @Schema(description = "메시지 유형", example = "MESSAGE")
     private MessageType messageType;
+    @Schema(description = "마지막 메시지 전송 시간", example = "2024-01-18T06:09:27.998")
     private LocalDateTime lastMessageTime;
+    @Schema(description = "읽지 않은 메시지 수", example = "3")
     private int uncheckedMessageCount;
+    @Schema(description = "상대방의 알람 토큰(암호화 적용)", example = "p+Zvgw7s3QKfd0L5KRWcAr8lj+ojc8FCkgqz8puYgakB5p6CrfbY/okmXYimvekkDvFazLwNQCy8LVkKgR91bt0smoBNk24rJ9FTDqk7pBM//7+P2t1vrZ757oEkk/4DhbgHQ3uEUFCcoT5zgNzWk0JZFIrqtNU8ufqOUmmVirPquQo1nY7lEMGOMPNn2S0hnJeACWOWw8fVU/qFWiiglizxBE/J2B1WqAIVwU1i7/c=")
     private String oppositeAlarmToken;
 
     private ChatroomSpecResponse(String chatroomId, String lastMessage, MessageType messageType,

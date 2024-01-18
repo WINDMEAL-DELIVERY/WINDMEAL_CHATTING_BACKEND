@@ -1,7 +1,6 @@
 package com.windmealchat.chat.service;
 
 import com.rabbitmq.client.AMQP;
-import com.windmealchat.chat.dto.request.ChatInitialRequest;
 import com.windmealchat.chat.dto.response.ChatMessageResponse.ChatMessageSpecResponse;
 import com.windmealchat.chat.exception.CanNotDeleteQueueException;
 import com.windmealchat.global.exception.ErrorCode;

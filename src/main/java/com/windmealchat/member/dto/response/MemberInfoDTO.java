@@ -1,6 +1,7 @@
 package com.windmealchat.member.dto.response;
 
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,9 +13,14 @@ import java.util.Optional;
 @Builder
 @AllArgsConstructor
 @RequiredArgsConstructor
+@Schema(title = "사용자 정보 응답")
 public class MemberInfoDTO {
+
+    @Schema(description = "사용자 아이디", example = "1")
     private Long id;
+    @Schema(description = "사용자 이메일", example = "windmealDelivery@gachon.ac.kr")
     private String email;
+    @Schema(description = "사용자 닉네임", example = "배달학과24학번최배달")
     private String nickname;
 
     public static MemberInfoDTO of(Long memberId, String email, String nickname) {

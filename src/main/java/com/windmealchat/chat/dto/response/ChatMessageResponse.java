@@ -14,7 +14,7 @@ import org.springframework.data.domain.Slice;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(title = "채팅 메시지")
+@Schema(title = "채팅 메시지 페이지네이션 응답")
 public class ChatMessageResponse {
 
   private Slice<ChatMessageSpecResponse> chatMessageSpecResponses;
@@ -25,11 +25,12 @@ public class ChatMessageResponse {
         .build();
   }
 
-
+  // TODO 채팅방 아이디를 포함해야 할지는 잘 모르겠다. 그리고 createdTime이 null로 들어가는 것도 문제.
   @Getter
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @Schema(title = "채팅 메시지 세부 정보")
   public static class ChatMessageSpecResponse {
     @Schema(description = "채팅 메시지", example = "예정보다 조금 일찍 도착할 것 같습니다!")
     private String message;
