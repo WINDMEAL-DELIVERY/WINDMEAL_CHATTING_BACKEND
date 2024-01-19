@@ -47,6 +47,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
   private String host;
   @Value("${domain.url.ws_host}")
   private String ws_host;
+  @Value("domain.url.local")
+  private String local;
+  @Value("${domain.url.chat_host}")
+  private String chat_host;
+  @Value("${domain.url.chat1}")
+  private String chat1;
+  @Value("${domain.url.chat2}")
+  private String chat2;
 
   private final AES256Util aes256Util;
   private final ObjectMapper objectMapper;
@@ -86,10 +94,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   @Override
   public void registerStompEndpoints(StompEndpointRegistry stompEndpointRegistry) {
-    stompEndpointRegistry.addEndpoint("/stomp/chat")
-//                .setAllowedOrigins("http://localhost:8081", "http://localhost:3000", "http://localhost:8080")
-        .setAllowedOriginPatterns("*")
-//        .setAllowedOrigins("http://localhost:3000")
+    stompEndpointRegistry.addEndpoint("/stomp/chat").setAllowedOrigins("*")
+//                .setAllowedOrigins(local, chat_host, chat1, chat2, ws_host)
+//        .setAllowedOriginPatterns("*")
         .addInterceptors(HttpHandShakeInterceptor());
 //                .withSockJS();
     stompEndpointRegistry.setErrorHandler(stompErrorHandler());
