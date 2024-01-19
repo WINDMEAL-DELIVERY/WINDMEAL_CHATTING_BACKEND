@@ -1,0 +1,76 @@
+name: windmeal_chat
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  issues: write
+  checks: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+
+    - name: make application.yml
+      run: |
+        mkdir ./src/main/resources 
+        mkdir ./src/main/resources/firebase
+        cd ./src/main/resources
+        
+        touch ./application.yml
+        touch ./key.yml
+        
+        echo "${{ secrets.CHAT_APPLICATION }}" >> ./application.yml
+        echo "${{ secrets.CHAT_KEY }}" >> ./key.yml
+        
+      shell: bash
+
+    - name: make firebase.json
+      run: |
+        cd ./src/main/resources/firebase
+        touch ./windmeal-firebase-adminsdk.json
+        
+    - name: create-json
+      id: create-json
+      uses: jsdaniell/create-json@1.1.2
+      with:
+        name: "windmeal-firebase-adminsdk.json"
+        json: ${{ secrets.FIREBASE_KEY }}
+        dir: 'src/main/resources/firebase'
+
+    - name: Build with Gradle
+      run: |
+        ./gradlew build -x check
+
+    - name: web docker build and push
+      run: |
+        docker login -u ${{ secrets.CHAT_DOCKER_USERNAME }} -p ${{ secrets.CHAT_DOCKER_PASSWORD }}
+        docker build -t ${{ secrets.CHAT_DOCKER_USERNAME }}/${{ secrets.CHAT_DOCKER_REPO }} .
+        docker push ${{ secrets.CHAT_DOCKER_USERNAME }}/${{ secrets.CHAT_DOCKER_REPO }} 
+
+    - name: executing remote ssh commands using password
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.CHAT_HOST }}
+        username: ubuntu
+        key: ${{ secrets.CHAT_PEM_KEY }}
+        port: 22
+        script: |
+          sudo docker kill windmeal_chatting
+          sudo docker container prune -f
+          sudo docker pull ${{ secrets.CHAT_DOCKER_USERNAME }}/${{ secrets.CHAT_DOCKER_REPO }}
+          sudo docker run -d -p 8080:8080 --name windmeal_chatting ${{ secrets.CHAT_DOCKER_USERNAME }}/${{ secrets.CHAT_DOCKER_REPO }}
+          sudo docker image prune -f
