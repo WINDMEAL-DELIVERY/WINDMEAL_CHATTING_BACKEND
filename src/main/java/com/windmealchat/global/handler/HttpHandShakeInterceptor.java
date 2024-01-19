@@ -58,7 +58,6 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
       WebSocketHandler wsHandler, Exception exception) {
     // 핸드쉐이크 이후의 콜백 메서드. 일단은 처리할 것이 없다고 판단되어 비워두겠다.
     log.info("Handshake 완료");
-    log.error(exception.getMessage());
   }
 
   private Optional<String> resolveToken(HttpServletRequest servletRequest, String type) {
