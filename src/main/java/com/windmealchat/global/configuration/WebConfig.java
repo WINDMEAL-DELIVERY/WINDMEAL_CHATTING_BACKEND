@@ -12,11 +12,17 @@ public class WebConfig implements WebMvcConfigurer {
   private String local;
   @Value("${domain.url.chat_host}")
   private String chat_host;
+  @Value("${domain.url.chat1}")
+  private String chat1;
+  @Value("${domain.url.chat2}")
+  private String chat2;
+  @Value("${domain.url.ws_host}")
+  private String ws_host;
 
   @Override
   public void addCorsMappings(CorsRegistry registry) {
     registry.addMapping("/**")
-        .allowedOrigins(local, chat_host)
+        .allowedOrigins(local, chat_host, chat1, chat2, ws_host)
         .allowedMethods("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
         .allowedHeaders(
             "Content-Type, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Authorization, X-Requested-With, requestId, Correlation-Id")
