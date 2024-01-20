@@ -94,9 +94,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   @Override
   public void registerStompEndpoints(StompEndpointRegistry stompEndpointRegistry) {
-    stompEndpointRegistry.addEndpoint("/stomp/chat").setAllowedOrigins("*")
-//                .setAllowedOrigins(local, chat_host, chat1, chat2, ws_host)
-//        .setAllowedOriginPatterns("*")
+    stompEndpointRegistry.addEndpoint("/stomp/chat")
+        .setAllowedOriginPatterns("*")
         .addInterceptors(HttpHandShakeInterceptor());
 //                .withSockJS();
     stompEndpointRegistry.setErrorHandler(stompErrorHandler());
