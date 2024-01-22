@@ -14,5 +14,7 @@ public class ExceptionConstants {
   // STOMP 인증 헤더와 쿼리 파라미터로 전달받은 토큰의 값이 다를 경우
   public static final String NOT_MATCHING_TOKEN = "NOT_MATCHING_TOKEN";
 
+  public static final String INTERNAL_ENCRYPTION_EXCEPTION = "INTERNAL_ENCRYPTION_EXCEPTION";
+
   public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
 }

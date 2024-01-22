@@ -55,8 +55,10 @@ public class StompErrorHandler extends StompSubProtocolErrorHandler {
     log.error("예외발생 : handleErrorMessageToClient");
     log.error("페이로드 : " + new String((byte[])errorMessage.getPayload()));
 
-    StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(errorMessage,
-        StompHeaderAccessor.class);
+    // TODO STOMP Method를 ERROR로 만들어서 보내주는게 가능한가?
+//    StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(errorMessage,
+//        StompHeaderAccessor.class);
+    StompHeaderAccessor accessor = StompHeaderAccessor.wrap(errorMessage);
     Assert.notNull(accessor, "No StompHeaderAccessor");
     if (!accessor.isMutable()) {
       accessor = StompHeaderAccessor.wrap(errorMessage);

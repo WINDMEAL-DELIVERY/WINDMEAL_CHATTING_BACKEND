@@ -12,7 +12,9 @@ import com.windmealchat.chat.exception.ExitedChatroomException;
 import com.windmealchat.chat.exception.NotChatroomMemberException;
 import com.windmealchat.chat.repository.ChatroomDocumentRepository;
 import com.windmealchat.chat.repository.MessageDocumentRepository;
+import com.windmealchat.global.exception.AesException;
 import com.windmealchat.global.exception.ErrorCode;
+import com.windmealchat.global.util.AES256Util;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +33,7 @@ public class ChatroomService {
   private final ChatroomDocumentRepository chatroomDocumentRepository;
   private final MessageDocumentRepository messageDocumentRepository;
   private final RabbitService rabbitService;
+  private final AES256Util aes256Util;
 
 
   /**
@@ -110,8 +113,13 @@ public class ChatroomService {
         buildQueueName(chatroomDocument, memberInfoDTO));
     String oppositeAlarmToken = memberInfoDTO.getId().equals(chatroomDocument.getOwnerId())
         ? chatroomDocument.getOwnerAlarmToken() : chatroomDocument.getGuestAlarmToken();
-    return ChatroomSpecResponse.of(chatroomDocument, messageDocument, queueMessageCount,
-        oppositeAlarmToken);
+    try {
+      String encrypt = aes256Util.encrypt(chatroomDocument.getId());
+      return ChatroomSpecResponse.of(chatroomDocument, encrypt, messageDocument, queueMessageCount,
+          oppositeAlarmToken);
+    } catch (Exception e) {
+      throw new AesException(ErrorCode.ENCRYPT_ERROR);
+    }
   }
 
   /**
