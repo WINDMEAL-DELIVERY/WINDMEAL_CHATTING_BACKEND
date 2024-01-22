@@ -49,7 +49,7 @@ public class ChatroomResponse {
       this.uncheckedMessageCount = uncheckedMessageCount;
     }
 
-    public static ChatroomSpecResponse of(ChatroomDocument chatroomDocument,
+    public static ChatroomSpecResponse of(ChatroomDocument chatroomDocument, String encrypt,
         MessageDocument messageDocument, int uncheckedMessageCount, String oppositeAlarmToken) {
       String lastMessage = messageDocument != null ? messageDocument.getMessage() : "";
       // 마지막으로 전송된 메시지가 없어서 전송 시간을 표시할 수 없는 경우는 채팅방이 생성된 시간을 대신 반환한다.
@@ -57,7 +57,7 @@ public class ChatroomResponse {
           : chatroomDocument.getCreatedTime();
       MessageType lastMessageType =
           messageDocument != null ? messageDocument.getMessageType() : MessageType.SYSTEM;
-      return new ChatroomSpecResponse(chatroomDocument.getId(), lastMessage, lastMessageType,
+      return new ChatroomSpecResponse(encrypt, lastMessage, lastMessageType,
           createdTime, uncheckedMessageCount, oppositeAlarmToken);
     }
 

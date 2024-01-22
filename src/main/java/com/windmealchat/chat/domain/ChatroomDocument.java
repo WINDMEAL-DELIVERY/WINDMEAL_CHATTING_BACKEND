@@ -23,6 +23,10 @@ public class ChatroomDocument {
 
   private Long orderId;
 
+  private String ownerEmail;
+
+  private String guestEmail;
+
   private String ownerAlarmToken;
 
   private String guestAlarmToken;
@@ -35,12 +39,14 @@ public class ChatroomDocument {
   private LocalDateTime createdTime;
 
   @Builder
-  public ChatroomDocument(String id, Long ownerId, Long guestId, Long orderId,
-      String ownerAlarmToken, String guestAlarmToken) {
+  public ChatroomDocument(String id, Long ownerId, Long guestId, Long orderId, String ownerEmail,
+      String guestEmail, String ownerAlarmToken, String guestAlarmToken) {
     this.id = id;
     this.ownerId = ownerId;
     this.guestId = guestId;
     this.orderId = orderId;
+    this.ownerEmail = ownerEmail;
+    this.guestEmail = guestEmail;
     this.isDeletedByOwner = false;
     this.isDeletedByGuest = false;
     this.ownerAlarmToken = ownerAlarmToken;

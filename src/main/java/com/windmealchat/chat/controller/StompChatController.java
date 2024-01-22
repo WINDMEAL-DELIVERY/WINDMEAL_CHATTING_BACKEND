@@ -8,6 +8,7 @@ import com.windmealchat.chat.service.StompChatService;
 import com.windmealchat.global.exception.ErrorCode;
 import com.windmealchat.global.exception.GeneralException;
 import com.windmealchat.global.token.service.TokenService;
+import com.windmealchat.global.util.AES256Util;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
