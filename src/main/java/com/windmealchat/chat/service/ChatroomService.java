@@ -8,13 +8,12 @@ import com.windmealchat.chat.dto.response.ChatMessageResponse.ChatMessageSpecRes
 import com.windmealchat.chat.dto.response.ChatroomResponse;
 import com.windmealchat.chat.dto.response.ChatroomResponse.ChatroomSpecResponse;
 import com.windmealchat.chat.exception.ChatroomNotFoundException;
-import com.windmealchat.chat.exception.ExitedChatroomException;
-import com.windmealchat.chat.exception.NotChatroomMemberException;
 import com.windmealchat.chat.repository.ChatroomDocumentRepository;
 import com.windmealchat.chat.repository.MessageDocumentRepository;
 import com.windmealchat.global.exception.AesException;
 import com.windmealchat.global.exception.ErrorCode;
 import com.windmealchat.global.util.AES256Util;
+import com.windmealchat.global.util.ChatroomValidator;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,13 +31,14 @@ public class ChatroomService {
 
   private final ChatroomDocumentRepository chatroomDocumentRepository;
   private final MessageDocumentRepository messageDocumentRepository;
+  private final ChatroomValidator chatroomValidator;
   private final RabbitService rabbitService;
   private final AES256Util aes256Util;
 
 
   /**
-   * 요청자가 속한 채팅방을 페이지네이션을 적용하여 조회한다. <br/>
-   * 채팅방의 정보와 더불어 사용자가 읽지 않은 채팅의 수, 마지막 채팅 메시지를 조회한다.
+   * 요청자가 속한 채팅방을 페이지네이션을 적용하여 조회한다. <br/> 채팅방의 정보와 더불어 사용자가 읽지 않은 채팅의 수, 마지막 채팅 메시지를 조회한다.
+   *
    * @param pageable
    * @return
    */
@@ -48,7 +48,8 @@ public class ChatroomService {
     List<ChatroomSpecResponse> chatroomSpecResponses = activeChatrooms.stream()
         .map(chatroomDocument -> toChatroomSpecResponse(chatroomDocument, memberInfoDTO)).sorted()
         .collect(Collectors.toList());
-    Slice<ChatroomSpecResponse> ChatroomSpecResponseSlice = new SliceImpl<>(chatroomSpecResponses, pageable,
+    Slice<ChatroomSpecResponse> ChatroomSpecResponseSlice = new SliceImpl<>(chatroomSpecResponses,
+        pageable,
         chatroomSpecResponses.size() > pageable.getPageSize() * pageable.getPageNumber());
     return ChatroomResponse.of(ChatroomSpecResponseSlice);
   }
@@ -66,7 +67,7 @@ public class ChatroomService {
     ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatRoomId)
         .orElseThrow(() -> new ChatroomNotFoundException(
             ErrorCode.NOT_FOUND));
-    checkChatroom(chatRoomId, memberInfoDTO);
+    chatroomValidator.checkChatroom(chatRoomId, memberInfoDTO);
     Slice<MessageDocument> messageDocuments = messageDocumentRepository.findByChatroomId(
         chatroomDocument.getId(), pageable);
     Slice<ChatMessageSpecResponse> chatMessageSpecResponses = messageDocuments.map(
@@ -85,7 +86,7 @@ public class ChatroomService {
     ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(
             chatroomLeaveRequest.getChatroomId())
         .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
-    checkChatroom(chatroomLeaveRequest.getChatroomId(), memberInfoDTO);
+    chatroomValidator.checkChatroom(chatroomLeaveRequest.getChatroomId(), memberInfoDTO);
     if (chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())) {
       chatroomDocument.updateIsDeletedByOwner();
     } else {
@@ -111,37 +112,17 @@ public class ChatroomService {
         chatroomDocument.getId());
     int queueMessageCount = rabbitService.getQueueMessages(
         buildQueueName(chatroomDocument, memberInfoDTO));
-    String oppositeAlarmToken = memberInfoDTO.getId().equals(chatroomDocument.getOwnerId())
-        ? chatroomDocument.getOwnerAlarmToken() : chatroomDocument.getGuestAlarmToken();
+
     try {
       String encrypt = aes256Util.encrypt(chatroomDocument.getId());
       return ChatroomSpecResponse.of(chatroomDocument, encrypt, messageDocument, queueMessageCount,
-          oppositeAlarmToken);
+          memberInfoDTO);
     } catch (Exception e) {
       throw new AesException(ErrorCode.ENCRYPT_ERROR);
     }
   }
 
-  /**
-   * 사용자가 이전에 나갔던 채팅방은 아닌지 검증한다. 채팅방에 사용자가 주인이나 손님으로 존재하는지, 존재한다면 이전에 나가지는 않았는지 순으로 검증한다.
-   *
-   * @param chatroomId
-   * @param memberInfoDTO
-   */
-  private void checkChatroom(String chatroomId, MemberInfoDTO memberInfoDTO) {
-    ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomId)
-        .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
-    if (!chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())
-        && !chatroomDocument.getGuestId().equals(memberInfoDTO.getId())) {
-      throw new NotChatroomMemberException(ErrorCode.VALIDATION_ERROR);
-    }
-    if ((chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())
-        && chatroomDocument.isDeletedByOwner())
-        || (chatroomDocument.getGuestId().equals(memberInfoDTO.getId())
-        && chatroomDocument.isDeletedByGuest())) {
-      throw new ExitedChatroomException(ErrorCode.BAD_REQUEST);
-    }
-  }
+
 
   private String buildQueueName(ChatroomDocument chatroomDocument, MemberInfoDTO memberInfoDTO) {
     return "room." + chatroomDocument.getId() + "." + memberInfoDTO.getEmail().split("@")[0];

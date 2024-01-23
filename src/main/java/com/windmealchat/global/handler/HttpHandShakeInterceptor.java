@@ -6,7 +6,6 @@ import static com.windmealchat.global.constants.TokenConstants.CODE_A;
 import static com.windmealchat.global.constants.TokenConstants.PREFIX_REFRESHTOKEN;
 import static com.windmealchat.global.constants.TokenConstants.TOKEN;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.windmealchat.global.token.dao.RefreshTokenDAO;
 import com.windmealchat.global.token.impl.TokenProvider;
 import com.windmealchat.global.util.AES256Util;

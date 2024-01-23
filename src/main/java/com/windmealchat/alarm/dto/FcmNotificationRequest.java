@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Schema(title = "알람 요청")
 public class FcmNotificationRequest {
 
-  @Schema(description = "알람 제목 (삭제 예정)", example = "채팅")
+  @Schema(description = "알람 제목", example = "채팅")
   private String title;
   @Schema(description = "알람 내용", example = "어디쯤 오셨나요?")
   private String body;
