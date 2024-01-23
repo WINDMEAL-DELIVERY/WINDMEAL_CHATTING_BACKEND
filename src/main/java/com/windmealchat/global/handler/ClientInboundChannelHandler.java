@@ -1,11 +1,14 @@
 package com.windmealchat.global.handler;
 
+import static com.windmealchat.global.constants.ExceptionConstants.DESERIALIZATION_EXCEPTION;
 import static com.windmealchat.global.constants.ExceptionConstants.EXPIRED_JWT;
+import static com.windmealchat.global.constants.ExceptionConstants.INVALID_ACCESS_TOKEN;
 import static com.windmealchat.global.constants.ExceptionConstants.INVALID_STOMP_AUTHORIZATION_HEADER;
 import static com.windmealchat.global.constants.ExceptionConstants.NOT_EXISTING_STOMP_AUTHORIZATION_HEADER;
 import static com.windmealchat.global.constants.ExceptionConstants.NOT_MATCHING_TOKEN;
 import static com.windmealchat.global.constants.TokenConstants.ALARM_TOKEN;
 import static com.windmealchat.global.constants.TokenConstants.AUTHORIZATION_HEADER;
+import static com.windmealchat.global.constants.TokenConstants.NICKNAME_KEY;
 import static com.windmealchat.global.constants.TokenConstants.TOKEN;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -20,6 +23,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,9 +46,9 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
   private final AES256Util aes256Util;
 
   /**
-   * 메시지를 전송하기 전 검증을 수행한다. <br/>
-   * 예외가 발생하면 예외 메시지를 커스텀한 뒤
+   * 메시지를 전송하기 전 검증을 수행한다. <br/> 예외가 발생하면 예외 메시지를 커스텀한 뒤
    * {@link com.windmealchat.global.handler.StompErrorHandler} 에게 전달한다.
+   *
    * @param message
    * @param channel
    * @return
@@ -63,8 +67,8 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
   }
 
   /**
-   * 메시지가 전송된 후 성공 여부와 관계 없이 호출된다. <br/>
-   * 여기서 SEND 타입의 메시지가 전송 성공했을 경우에만 알람을 발생시킨다.
+   * 메시지가 전송된 후 성공 여부와 관계 없이 호출된다. <br/> 여기서 SEND 타입의 메시지가 전송 성공했을 경우에만 알람을 발생시킨다.
+   *
    * @param message
    * @param channel
    * @param sent
@@ -78,27 +82,31 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
     if (StompCommand.SEND.equals(accessor.getCommand())) {
       Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
       String alarmToken = (String) sessionAttributes.get(ALARM_TOKEN);
+      String accessToken = (String) sessionAttributes.get(TOKEN);
       String serializedMessageDTO = new String((byte[]) message.getPayload(),
           StandardCharsets.UTF_8);
 
       try {
         MessageDTO messageDTO = objectMapper.readValue(serializedMessageDTO, MessageDTO.class);
-        log.info("postSendMsg : " + messageDTO.getMessage());
-        sendNotification(messageDTO, alarmToken);
+        MemberInfoDTO memberInfoFromToken = tokenProvider.getMemberInfoFromToken(
+            accessToken).get();
+        sendNotification(messageDTO, alarmToken, memberInfoFromToken.getNickname());
       } catch (JsonProcessingException e) {
-        e.printStackTrace();
+        throw new MessageDeliveryException(DESERIALIZATION_EXCEPTION);
+      } catch (NoSuchElementException e) {
+        throw new MessageDeliveryException(INVALID_ACCESS_TOKEN);
       }
     }
   }
 
   /**
    * 메시지를 전송해도 되는지 검증하는 필터의 역할을 수행한다. <br/>
-   * {@link org.springframework.messaging.simp.stomp.StompCommand}의
-   * SEND, CONNECT, SUBSCRIBE 명령에 대하여 검증을 수행한다. <br/>
-   * 검증이 수행되는 경우, 다음과 같은 항목을 검증한다.
+   * {@link org.springframework.messaging.simp.stomp.StompCommand}의 SEND, CONNECT, SUBSCRIBE 명령에 대하여
+   * 검증을 수행한다. <br/> 검증이 수행되는 경우, 다음과 같은 항목을 검증한다.
    * <li>STOMP 헤더에 토큰이 정상적으로 존재하는지</li>
    * <li>STOMP 헤더에 존재하는 토큰이 세션에 저장된 토큰과 일치하는지</li>
    * <li>토큰의 유효기간, 형식 등이 유효한지</li>
+   *
    * @param message
    * @return boolean
    */
@@ -131,10 +139,10 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
 
   }
 
-  private void sendNotification(MessageDTO messageDTO, String token) {
-    // TODO title 이 굳이 필요해보이진 않는다. 제외해도 괜찮을 것 같다.
+  private void sendNotification(MessageDTO messageDTO, String token, String nickname) {
+    StringBuffer alarmMessage = new StringBuffer(nickname).append(" : ")
+        .append(messageDTO.getMessage());
     fcmNotificationService.sendNotification(
-        FcmNotificationRequest.of("CHATTING", messageDTO.getMessage()),
-        token);
+        FcmNotificationRequest.of("CHATTING", alarmMessage.toString()), token);
   }
 }
