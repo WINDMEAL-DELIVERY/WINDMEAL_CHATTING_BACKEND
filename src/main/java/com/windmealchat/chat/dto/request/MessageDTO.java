@@ -20,16 +20,8 @@ public class MessageDTO {
     private MessageType type;
     private String message;
 
-    public MessageDocument toDocument(MemberInfoDTO memberInfoDTO) {
-        return new MessageDocument(this, memberInfoDTO);
-    }
-
-    public MessageDocument toDocument(String message) {
-        return MessageDocument.builder()
-            .chatroomId(this.chatRoomId)
-            .messageType(this.type)
-            .message(message)
-            .build();
+    public MessageDocument toDocument(String decryptedId, MemberInfoDTO memberInfoDTO) {
+        return new MessageDocument(decryptedId,this, memberInfoDTO);
     }
 
 

@@ -31,12 +31,11 @@ public class MessageDocument {
   @CreatedDate
   private LocalDateTime createdTime;
 
-  public MessageDocument(MessageDTO messageDTO, MemberInfoDTO memberInfoDTO) {
-    this.chatroomId = messageDTO.getChatRoomId();
+  public MessageDocument(String decryptedId, MessageDTO messageDTO, MemberInfoDTO memberInfoDTO) {
+    this.chatroomId = decryptedId;
     this.messageType = messageDTO.getType();
     this.message = messageDTO.getMessage();
     this.senderId = memberInfoDTO.getId();
-    ;
     this.senderEmail = memberInfoDTO.getEmail();
   }
 
