@@ -80,6 +80,7 @@ public class ChatRestController {
     return ResultDataResponseDTO.of(chatrooms);
   }
 
+  // TODO delete?
   @PostMapping("/chatroom")
   @Operation(summary = "채팅방 나가기 요청", description = "채팅방을 나갑니다.")
   @ApiResponses({

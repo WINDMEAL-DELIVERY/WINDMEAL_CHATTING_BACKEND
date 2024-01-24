@@ -30,6 +30,8 @@ public class ChatroomResponse {
 
     @Schema(description = "채팅방 아이디", example = "65a8c06b58fdc8725d6b10b1")
     private String chatroomId;
+    @Schema(description = "주문 아이디", example = "1")
+    private Long orderId;
     @Schema(description = "마지막 메시지", example = "죄송합니다 오다가 실수로 피자를 다 먹어버렸어요;;")
     private String lastMessage;
     @Schema(description = "메시지 유형", example = "MESSAGE")
@@ -43,8 +45,9 @@ public class ChatroomResponse {
     @Schema(description = "상대방의 알람 토큰(암호화 적용)", example = "p+Zvgw7s3QKfd0L5KRWcAr8lj+ojc8FCkgqz8puYgakB5p6CrfbY/okmXYimvekkDvFazLwNQCy8LVkKgR91bt0smoBNk24rJ9FTDqk7pBM//7+P2t1vrZ757oEkk/4DhbgHQ3uEUFCcoT5zgNzWk0JZFIrqtNU8ufqOUmmVirPquQo1nY7lEMGOMPNn2S0hnJeACWOWw8fVU/qFWiiglizxBE/J2B1WqAIVwU1i7/c=")
     private String opponentAlarmToken;
 
-    private ChatroomSpecResponse(String chatroomId, String lastMessage, MessageType messageType,
+    private ChatroomSpecResponse(String chatroomId, Long orderId, String lastMessage, MessageType messageType,
         LocalDateTime lastMessageTime, String opponentNickname, int uncheckedMessageCount, String opponentAlarmToken) {
+      this.orderId = orderId;
       this.chatroomId = chatroomId;
       this.lastMessage = lastMessage;
       this.messageType = messageType;
@@ -69,7 +72,7 @@ public class ChatroomResponse {
       String opponentNickname =
           isOwner ? chatroomDocument.getGuestNickname() : chatroomDocument.getOwnerNickname();
 
-      return new ChatroomSpecResponse(encrypt, lastMessage, lastMessageType,
+      return new ChatroomSpecResponse(encrypt, chatroomDocument.getOrderId(), lastMessage, lastMessageType,
           lastMessageTime, opponentNickname, uncheckedMessageCount, opponentAlarmToken);
     }
 
