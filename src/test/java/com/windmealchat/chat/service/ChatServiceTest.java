@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -238,6 +239,103 @@ public class ChatServiceTest {
     //then
     assertThatThrownBy(() -> chatroomService.leaveChatroom(ownerInfo,
         createChatroomLeaveRequest(chatroom.getId())))
+        .isInstanceOf(ExitedChatroomException.class)
+        .hasMessage("이미 사용자가 나간 채팅방입니다.");
+  }
+
+  @Test
+  @DisplayName("메시지 전송 - 성공")
+  public void sendMessageTest() throws Exception {
+    //given
+    MemberInfoDTO ownerInfo = createMemberInfoDTO(1L, "owner@gachon.ac.kr", "owner");
+    MemberInfoDTO guestInfo = createMemberInfoDTO(2L, "guest@gachon.ac.kr", "guest");
+    ChatroomDocument chatroom = createChatroom(1L, ownerInfo.getId(), guestInfo.getId(),
+        ownerInfo.getEmail(), guestInfo.getEmail(),
+        ownerInfo.getNickname(), guestInfo.getNickname());
+
+    //when
+    MessageDTO messageDTO = createMessageDTO(chatroom.getId(), "테스트용 채팅 메시지");
+    stompChatService.sendMessage(aes256Util.encrypt(chatroom.getId()), messageDTO, ownerInfo);
+    PageRequest pageRequest = PageRequest.of(0, 10);
+
+    //then
+    ChatMessageResponse chatMessages = chatroomService.getChatMessages(ownerInfo, pageRequest,
+        chatroom.getId());
+    assertThat(chatMessages.getChatMessageSpecResponses().getContent().get(0)).extracting(
+            ChatMessageSpecResponse::getMessage,
+            ChatMessageSpecResponse::getSenderId)
+        .containsExactly("테스트용 채팅 메시지", ownerInfo.getId());
+
+    ChatroomResponse chatrooms = chatroomService.getChatrooms(ownerInfo, pageRequest);
+    assertThat(chatrooms.getChatroomSpecResponses().getContent().get(0)).extracting(
+            ChatroomSpecResponse::getLastMessage,
+            ChatroomSpecResponse::getOpponentNickname)
+        .containsExactly("테스트용 채팅 메시지", guestInfo.getNickname());
+  }
+
+  @Test
+  @DisplayName("메시지 전송 - 실패 : 존재하지 않는 채팅방")
+  public void sendInvalidChatroomMessageTest() throws Exception {
+    //given
+    MemberInfoDTO ownerInfo = createMemberInfoDTO(1L, "owner@gachon.ac.kr", "owner");
+    MemberInfoDTO guestInfo = createMemberInfoDTO(2L, "guest@gachon.ac.kr", "guest");
+    ChatroomDocument chatroom = createChatroom(1L, ownerInfo.getId(), guestInfo.getId(),
+        ownerInfo.getEmail(), guestInfo.getEmail(),
+        ownerInfo.getNickname(), guestInfo.getNickname());
+
+    //when
+    MessageDTO messageDTO = createMessageDTO(chatroom.getId(), "테스트용 채팅 메시지");
+
+    //then
+    assertThatThrownBy(
+        () -> stompChatService.sendMessage(aes256Util.encrypt("invalidChatroomId"), messageDTO,
+            ownerInfo))
+        .isInstanceOf(ChatroomNotFoundException.class)
+        .hasMessage("채팅방을 찾을 수 없습니다.");
+  }
+
+  @Test
+  @DisplayName("메시지 전송 - 실패 : 채팅방의 구성원이 아님")
+  public void sendMessageToOthersChatroomTest() throws Exception {
+    //given
+    MemberInfoDTO ownerInfo = createMemberInfoDTO(1L, "owner@gachon.ac.kr", "owner");
+    MemberInfoDTO guestInfo = createMemberInfoDTO(2L, "guest@gachon.ac.kr", "guest");
+    MemberInfoDTO currentMemberInfo = createMemberInfoDTO(3L, "currentMember@gachon.ac.kr",
+        "currentMember");
+    ChatroomDocument chatroom = createChatroom(1L, ownerInfo.getId(), guestInfo.getId(),
+        ownerInfo.getEmail(), guestInfo.getEmail(),
+        ownerInfo.getNickname(), guestInfo.getNickname());
+
+    //when
+    MessageDTO messageDTO = createMessageDTO(chatroom.getId(), "테스트용 채팅 메시지");
+
+    //then
+    assertThatThrownBy(
+        () -> stompChatService.sendMessage(aes256Util.encrypt(chatroom.getId()), messageDTO,
+            currentMemberInfo))
+        .isInstanceOf(NotChatroomMemberException.class)
+        .hasMessage("사용자는 해당 채팅방의 멤버가 아닙니다.");
+  }
+
+  @Test
+  @DisplayName("메시지 전송 - 실패 : 이미 나간 채팅방")
+  public void sendMessageToAlreadyLeftChatroomTest() throws Exception {
+    //given
+    MemberInfoDTO ownerInfo = createMemberInfoDTO(1L, "owner@gachon.ac.kr", "owner");
+    MemberInfoDTO guestInfo = createMemberInfoDTO(2L, "guest@gachon.ac.kr", "guest");
+    ChatroomDocument chatroom = createChatroom(1L, ownerInfo.getId(), guestInfo.getId(),
+        ownerInfo.getEmail(), guestInfo.getEmail(),
+        ownerInfo.getNickname(), guestInfo.getNickname());
+
+    //when
+    ChatroomLeaveRequest chatroomLeaveRequest = createChatroomLeaveRequest(chatroom.getId());
+    chatroomService.leaveChatroom(ownerInfo, chatroomLeaveRequest);
+    MessageDTO messageDTO = createMessageDTO(chatroom.getId(), "테스트용 채팅 메시지");
+
+    //then
+    assertThatThrownBy(
+        () -> stompChatService.sendMessage(aes256Util.encrypt(chatroom.getId()), messageDTO,
+            ownerInfo))
         .isInstanceOf(ExitedChatroomException.class)
         .hasMessage("이미 사용자가 나간 채팅방입니다.");
   }
