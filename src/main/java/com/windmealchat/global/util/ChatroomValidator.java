@@ -4,6 +4,7 @@ import com.windmealchat.chat.domain.ChatroomDocument;
 import com.windmealchat.chat.exception.ChatroomNotFoundException;
 import com.windmealchat.chat.exception.ExitedChatroomException;
 import com.windmealchat.chat.exception.NotChatroomMemberException;
+import com.windmealchat.chat.exception.SingleChattingTrialException;
 import com.windmealchat.chat.repository.ChatroomDocumentRepository;
 import com.windmealchat.global.exception.ErrorCode;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
@@ -20,7 +21,7 @@ public class ChatroomValidator {
     return memberInfoDTO.getId().equals(chatroomDocument.getOwnerId());
   }
 
-  public void checkChatroom(String chatroomId, MemberInfoDTO memberInfoDTO) {
+  public void checkChatroomForRead(String chatroomId, MemberInfoDTO memberInfoDTO) {
     ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomId)
         .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
     if (!chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())
@@ -31,6 +32,24 @@ public class ChatroomValidator {
     if ((isOwner && chatroomDocument.isDeletedByOwner())
         || (!isOwner && chatroomDocument.isDeletedByGuest())) {
       throw new ExitedChatroomException(ErrorCode.BAD_REQUEST);
+    }
+  }
+
+  public void checkChatroomForSend(String chatroomId, MemberInfoDTO memberInfoDTO) {
+    ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomId)
+        .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
+    if (!chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())
+        && !chatroomDocument.getGuestId().equals(memberInfoDTO.getId())) {
+      throw new NotChatroomMemberException(ErrorCode.VALIDATION_ERROR);
+    }
+    boolean isOwner = isOwner(memberInfoDTO, chatroomDocument);
+    if ((isOwner && chatroomDocument.isDeletedByOwner())
+        || (!isOwner && chatroomDocument.isDeletedByGuest())) {
+      throw new ExitedChatroomException(ErrorCode.BAD_REQUEST);
+    }
+    if (isOwner && chatroomDocument.isDeletedByGuest()
+        || !isOwner && chatroomDocument.isDeletedByOwner()) {
+      throw new SingleChattingTrialException(ErrorCode.BAD_REQUEST);
     }
   }
 }

@@ -67,7 +67,7 @@ public class ChatroomService {
     ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatRoomId)
         .orElseThrow(() -> new ChatroomNotFoundException(
             ErrorCode.NOT_FOUND));
-    chatroomValidator.checkChatroom(chatRoomId, memberInfoDTO);
+    chatroomValidator.checkChatroomForRead(chatRoomId, memberInfoDTO);
     Slice<MessageDocument> messageDocuments = messageDocumentRepository.findByChatroomIdOrderByMessageIdDesc(
         chatroomDocument.getId(), pageable);
     Slice<ChatMessageSpecResponse> chatMessageSpecResponses = messageDocuments.map(
@@ -86,7 +86,7 @@ public class ChatroomService {
     ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(
             chatroomLeaveRequest.getChatroomId())
         .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
-    chatroomValidator.checkChatroom(chatroomLeaveRequest.getChatroomId(), memberInfoDTO);
+    chatroomValidator.checkChatroomForRead(chatroomLeaveRequest.getChatroomId(), memberInfoDTO);
     if (chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())) {
       chatroomDocument.updateIsDeletedByOwner();
     } else {
