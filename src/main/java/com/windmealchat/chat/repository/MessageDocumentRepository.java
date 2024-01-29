@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface MessageDocumentRepository extends MongoRepository<MessageDocument, String> {
 
-  Slice<MessageDocument> findByChatroomId(String chatroomId, Pageable pageable);
+  Slice<MessageDocument> findByChatroomIdOrderByMessageIdDesc(String chatroomId, Pageable pageable);
 
   MessageDocument findTopByChatroomIdOrderByCreatedTimeDesc(String chatroomId);
 

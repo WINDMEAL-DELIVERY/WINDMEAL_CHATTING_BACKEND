@@ -68,7 +68,7 @@ public class ChatroomService {
         .orElseThrow(() -> new ChatroomNotFoundException(
             ErrorCode.NOT_FOUND));
     chatroomValidator.checkChatroom(chatRoomId, memberInfoDTO);
-    Slice<MessageDocument> messageDocuments = messageDocumentRepository.findByChatroomId(
+    Slice<MessageDocument> messageDocuments = messageDocumentRepository.findByChatroomIdOrderByMessageIdDesc(
         chatroomDocument.getId(), pageable);
     Slice<ChatMessageSpecResponse> chatMessageSpecResponses = messageDocuments.map(
         ChatMessageSpecResponse::of);
@@ -121,7 +121,6 @@ public class ChatroomService {
       throw new AesException(ErrorCode.ENCRYPT_ERROR);
     }
   }
-
 
 
   private String buildQueueName(ChatroomDocument chatroomDocument, MemberInfoDTO memberInfoDTO) {
