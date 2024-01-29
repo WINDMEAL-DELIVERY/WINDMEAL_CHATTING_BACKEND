@@ -26,7 +26,6 @@ public class ChatMessageResponse {
         .build();
   }
 
-  // TODO 채팅방 아이디를 포함해야 할지는 잘 모르겠다. 그리고 createdTime이 null로 들어가는 것도 문제.
   @Getter
   @Builder
   @NoArgsConstructor
