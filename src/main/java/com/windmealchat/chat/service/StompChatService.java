@@ -37,14 +37,15 @@ public class StompChatService {
     chatroomValidator.checkChatroomForSend(chatroomId, memberInfoDTO);
     MessageDocument savedMessage = messageDocumentRepository.save(
         messageDTO.toDocument(chatroomId, memberInfoDTO));
-    ChatMessageSpecResponse chatMessageSpecResponse = ChatMessageSpecResponse.of(savedMessage);
+
     // 메시지를 각각 전송한다.
     String otherEmail = memberInfoDTO.getEmail().equals(chatroomDocument.getOwnerEmail())
         ? chatroomDocument.getGuestEmail() : chatroomDocument.getOwnerEmail();
     rabbitService.createQueue(encryptedChatroomId, otherEmail);
     rabbitService.sendMessage(encryptedChatroomId, memberInfoDTO.getEmail(),
-        chatMessageSpecResponse);
-    rabbitService.sendMessage(encryptedChatroomId, otherEmail, chatMessageSpecResponse);
+        ChatMessageSpecResponse.of(savedMessage, true));
+    rabbitService.sendMessage(encryptedChatroomId, otherEmail,
+        ChatMessageSpecResponse.of(savedMessage, false));
   }
 
 

@@ -59,7 +59,7 @@ public class ChatroomService {
    *
    * @param memberInfoDTO
    * @param pageable
-   * @param chatRoomId
+   * @param encryptedChatroomId
    * @return
    */
   public ChatMessageResponse getChatMessages(MemberInfoDTO memberInfoDTO, Pageable pageable,
@@ -73,7 +73,7 @@ public class ChatroomService {
     Slice<MessageDocument> messageDocuments = messageDocumentRepository.findByChatroomIdOrderByMessageIdDesc(
         chatroomDocument.getId(), pageable);
     Slice<ChatMessageSpecResponse> chatMessageSpecResponses = messageDocuments.map(
-        ChatMessageSpecResponse::of);
+        each -> ChatMessageSpecResponse.of(each, memberInfoDTO.getId().equals(each.getSenderId())));
     return ChatMessageResponse.of(chatMessageSpecResponses);
   }
 

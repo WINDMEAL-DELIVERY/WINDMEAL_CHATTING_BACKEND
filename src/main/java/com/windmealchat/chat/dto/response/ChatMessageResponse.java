@@ -39,14 +39,17 @@ public class ChatMessageResponse {
     @Schema(description = "메시지 전송자 ID", example = "3")
     private Long senderId;
     @Schema(description = "메시지 전송일", example = "2023-12-10T14:23:05.023")
-    private LocalDateTime createdTime;
+    private LocalDateTime sendTime;
+    @Schema(description = "자신이 보낸 메시지 여부", example = "false")
+    private boolean isFromMe;
 
-    public static ChatMessageSpecResponse of(MessageDocument messageDocument) {
+    public static ChatMessageSpecResponse of(MessageDocument messageDocument, boolean isFromMe) {
       return ChatMessageSpecResponse.builder()
           .messageType(messageDocument.getMessageType())
-          .createdTime(messageDocument.getCreatedTime())
+          .sendTime(messageDocument.getCreatedTime())
           .senderId(messageDocument.getSenderId())
           .message(messageDocument.getMessage())
+          .isFromMe(isFromMe)
           .build();
     }
 
