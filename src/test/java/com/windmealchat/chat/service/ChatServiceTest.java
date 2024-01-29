@@ -18,6 +18,7 @@ import com.windmealchat.chat.dto.response.ChatroomResponse.ChatroomSpecResponse;
 import com.windmealchat.chat.exception.ChatroomNotFoundException;
 import com.windmealchat.chat.exception.ExitedChatroomException;
 import com.windmealchat.chat.exception.NotChatroomMemberException;
+import com.windmealchat.chat.exception.SingleChattingTrialException;
 import com.windmealchat.chat.repository.ChatroomDocumentRepository;
 import com.windmealchat.chat.repository.MessageDocumentRepository;
 import com.windmealchat.global.util.AES256Util;
@@ -338,6 +339,29 @@ public class ChatServiceTest {
             ownerInfo))
         .isInstanceOf(ExitedChatroomException.class)
         .hasMessage("이미 사용자가 나간 채팅방입니다.");
+  }
+
+  @Test
+  @DisplayName("메시지 전송 - 실패 : 상대방이 나간 채팅방")
+  public void sendSingleMessageTest() throws Exception {
+    //given
+    MemberInfoDTO ownerInfo = createMemberInfoDTO(1L, "owner@gachon.ac.kr", "owner");
+    MemberInfoDTO guestInfo = createMemberInfoDTO(2L, "guest@gachon.ac.kr", "guest");
+    ChatroomDocument chatroom = createChatroom(1L, ownerInfo.getId(), guestInfo.getId(),
+        ownerInfo.getEmail(), guestInfo.getEmail(),
+        ownerInfo.getNickname(), guestInfo.getNickname());
+
+    //when
+    ChatroomLeaveRequest chatroomLeaveRequest = createChatroomLeaveRequest(chatroom.getId());
+    chatroomService.leaveChatroom(guestInfo, chatroomLeaveRequest);
+    MessageDTO messageDTO = createMessageDTO(chatroom.getId(), "테스트용 채팅 메시지");
+
+    //then
+    assertThatThrownBy(
+        () -> stompChatService.sendMessage(aes256Util.encrypt(chatroom.getId()), messageDTO,
+            ownerInfo))
+        .isInstanceOf(SingleChattingTrialException.class)
+        .hasMessage("혼자 있는 채팅방에서는 채팅을 보낼 수 없습니다.");
   }
 
   @Test
