@@ -63,11 +63,13 @@ public class ChatroomService {
    * @return
    */
   public ChatMessageResponse getChatMessages(MemberInfoDTO memberInfoDTO, Pageable pageable,
-      String chatRoomId) {
-    ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatRoomId)
+      String encryptedChatroomId) {
+    String chatroomId = aes256Util.decrypt(encryptedChatroomId)
+        .orElseThrow(() -> new AesException(ErrorCode.ENCRYPT_ERROR));
+    ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomId)
         .orElseThrow(() -> new ChatroomNotFoundException(
             ErrorCode.NOT_FOUND));
-    chatroomValidator.checkChatroomForRead(chatRoomId, memberInfoDTO);
+    chatroomValidator.checkChatroomForRead(chatroomId, memberInfoDTO);
     Slice<MessageDocument> messageDocuments = messageDocumentRepository.findByChatroomIdOrderByMessageIdDesc(
         chatroomDocument.getId(), pageable);
     Slice<ChatMessageSpecResponse> chatMessageSpecResponses = messageDocuments.map(
@@ -83,10 +85,11 @@ public class ChatroomService {
    */
   public void leaveChatroom(MemberInfoDTO memberInfoDTO,
       ChatroomLeaveRequest chatroomLeaveRequest) {
-    ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(
-            chatroomLeaveRequest.getChatroomId())
+    String chatroomId = aes256Util.decrypt(chatroomLeaveRequest.getChatroomId())
+        .orElseThrow(() -> new AesException(ErrorCode.ENCRYPT_ERROR));
+    ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomId)
         .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
-    chatroomValidator.checkChatroomForRead(chatroomLeaveRequest.getChatroomId(), memberInfoDTO);
+    chatroomValidator.checkChatroomForRead(chatroomId, memberInfoDTO);
     if (chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())) {
       chatroomDocument.updateIsDeletedByOwner();
     } else {
