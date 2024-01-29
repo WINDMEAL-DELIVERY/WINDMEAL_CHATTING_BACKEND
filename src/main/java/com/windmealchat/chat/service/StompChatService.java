@@ -34,7 +34,7 @@ public class StompChatService {
     // TODO 여기 있는 모든 예외 메시지들 모두 MessageDeliveryException으로 바꿔보기
     ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomId)
         .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
-    chatroomValidator.checkChatroom(chatroomId, memberInfoDTO);
+    chatroomValidator.checkChatroomForSend(chatroomId, memberInfoDTO);
     MessageDocument savedMessage = messageDocumentRepository.save(
         messageDTO.toDocument(chatroomId, memberInfoDTO));
     ChatMessageSpecResponse chatMessageSpecResponse = ChatMessageSpecResponse.of(savedMessage);
