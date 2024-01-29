@@ -1,7 +1,8 @@
 package com.windmealchat.chatroom.service;
 
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -10,6 +11,9 @@ import com.windmealchat.chat.domain.ChatroomDocument;
 import com.windmealchat.chat.dto.request.ChatroomLeaveRequest;
 import com.windmealchat.chat.dto.response.ChatroomResponse;
 import com.windmealchat.chat.dto.response.ChatroomResponse.ChatroomSpecResponse;
+import com.windmealchat.chat.exception.ChatroomNotFoundException;
+import com.windmealchat.chat.exception.ExitedChatroomException;
+import com.windmealchat.chat.exception.NotChatroomMemberException;
 import com.windmealchat.chat.repository.ChatroomDocumentRepository;
 import com.windmealchat.chat.service.ChatroomService;
 import com.windmealchat.chat.service.RabbitService;
@@ -18,7 +22,6 @@ import com.windmealchat.member.dto.response.MemberInfoDTO;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -176,6 +179,35 @@ public class ChatroomServiceTest {
   public void leaveInvalidChatroom() {
     //given
     MemberInfoDTO ownerInfo = createMemberInfoDTO(1L, "owner@gachon.ac.kr", "owner");
+    ChatroomLeaveRequest invalidChatroomRequest = createChatroomLeaveRequest("invalidChatroomId");
+    //when & then
+    assertThatThrownBy(() -> chatroomService.leaveChatroom(ownerInfo, invalidChatroomRequest))
+        .isInstanceOf(ChatroomNotFoundException.class)
+        .hasMessage("채팅방을 찾을 수 없습니다.");
+  }
+
+  @Test
+  @DisplayName("채팅방 삭제(나가기) 테스트 - 실패 : 채팅방의 구성원이 아님")
+  public void leaveOthersChatroom() {
+    //given
+    MemberInfoDTO ownerInfo = createMemberInfoDTO(1L, "owner@gachon.ac.kr", "owner");
+    MemberInfoDTO guestInfo = createMemberInfoDTO(2L, "guest@gachon.ac.kr", "guest");
+    MemberInfoDTO currentMemberInfo = createMemberInfoDTO(3L, "currentMember@gachon.ac.kr", "currentMember");
+    ChatroomDocument chatroom = createChatroom(1L, ownerInfo.getId(), guestInfo.getId(),
+        ownerInfo.getEmail(), guestInfo.getEmail(),
+        ownerInfo.getNickname(), guestInfo.getNickname());
+    ChatroomLeaveRequest chatroomLeaveRequest = createChatroomLeaveRequest(chatroom.getId());
+    //when & then
+    assertThatThrownBy(() -> chatroomService.leaveChatroom(currentMemberInfo, chatroomLeaveRequest))
+        .isInstanceOf(NotChatroomMemberException.class)
+        .hasMessage("사용자는 해당 채팅방의 멤버가 아닙니다.");
+  }
+
+  @Test
+  @DisplayName("채팅방 삭제(나가기) 테스트 - 실패 : 이미 나간 채팅방")
+  public void leaveAlreadyLeftChatroom() {
+    //given
+    MemberInfoDTO ownerInfo = createMemberInfoDTO(1L, "owner@gachon.ac.kr", "owner");
     MemberInfoDTO guestInfo = createMemberInfoDTO(2L, "guest@gachon.ac.kr", "guest");
     ChatroomDocument chatroom = createChatroom(1L, ownerInfo.getId(), guestInfo.getId(),
         ownerInfo.getEmail(), guestInfo.getEmail(),
@@ -183,10 +215,11 @@ public class ChatroomServiceTest {
 
     //when
     chatroomService.leaveChatroom(ownerInfo, createChatroomLeaveRequest(chatroom.getId()));
-    ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroom.getId()).get();
 
     //then
-    assertThat(chatroomDocument.isDeletedByOwner()).isTrue();
+    assertThatThrownBy(() -> chatroomService.leaveChatroom(ownerInfo, createChatroomLeaveRequest(chatroom.getId())))
+        .isInstanceOf(ExitedChatroomException.class)
+        .hasMessage("이미 사용자가 나간 채팅방입니다.");
   }
 
 }
