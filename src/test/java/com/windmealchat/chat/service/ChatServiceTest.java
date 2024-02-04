@@ -74,8 +74,6 @@ public class ChatServiceTest {
         .guestId(guestId)
         .ownerEmail(ownerEmail)
         .guestEmail(guestEmail)
-        .ownerNickname(ownerNickname)
-        .guestNickname(guestNickname)
         .build();
     return chatroomDocumentRepository.save(chatroomDocument);
   }

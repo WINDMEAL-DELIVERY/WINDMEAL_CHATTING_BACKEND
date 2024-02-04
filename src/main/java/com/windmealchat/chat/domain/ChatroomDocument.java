@@ -27,14 +27,6 @@ public class ChatroomDocument {
 
   private String guestEmail;
 
-  private String ownerNickname;
-
-  private String guestNickname;
-
-  private String ownerAlarmToken;
-
-  private String guestAlarmToken;
-
   private boolean isDeletedByOwner = false;
 
   private boolean isDeletedByGuest = false;
@@ -44,8 +36,7 @@ public class ChatroomDocument {
 
   @Builder
   public ChatroomDocument(String id, Long ownerId, Long guestId, Long orderId, String ownerEmail,
-      String guestEmail, String ownerNickname, String guestNickname, String ownerAlarmToken,
-      String guestAlarmToken) {
+      String guestEmail) {
     this.id = id;
     this.ownerId = ownerId;
     this.guestId = guestId;
@@ -54,10 +45,6 @@ public class ChatroomDocument {
     this.guestEmail = guestEmail;
     this.isDeletedByOwner = false;
     this.isDeletedByGuest = false;
-    this.ownerNickname = ownerNickname;
-    this.guestNickname = guestNickname;
-    this.ownerAlarmToken = ownerAlarmToken;
-    this.guestAlarmToken = guestAlarmToken;
   }
 
   public void updateIsDeletedByOwner() {

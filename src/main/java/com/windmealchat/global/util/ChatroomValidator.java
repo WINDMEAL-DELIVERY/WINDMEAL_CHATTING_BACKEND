@@ -52,4 +52,8 @@ public class ChatroomValidator {
       throw new SingleChattingTrialException(ErrorCode.BAD_REQUEST);
     }
   }
+
+  public boolean isOwner(ChatroomDocument chatroomDocument, MemberInfoDTO memberInfoDTO) {
+    return chatroomDocument.getOwnerId().equals(memberInfoDTO.getId());
+  }
 }

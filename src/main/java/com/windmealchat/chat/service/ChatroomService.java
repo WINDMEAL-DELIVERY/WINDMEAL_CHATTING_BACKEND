@@ -14,8 +14,12 @@ import com.windmealchat.global.exception.AesException;
 import com.windmealchat.global.exception.ErrorCode;
 import com.windmealchat.global.util.AES256Util;
 import com.windmealchat.global.util.ChatroomValidator;
+import com.windmealchat.member.domain.Member;
 import com.windmealchat.member.dto.response.MemberInfoDTO;
+import com.windmealchat.member.exception.MemberNotFoundException;
+import com.windmealchat.member.repository.MemberRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,15 +27,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ChatroomService {
 
   private final ChatroomDocumentRepository chatroomDocumentRepository;
   private final MessageDocumentRepository messageDocumentRepository;
   private final ChatroomValidator chatroomValidator;
+  private final MemberRepository memberRepository;
   private final RabbitService rabbitService;
   private final AES256Util aes256Util;
 
@@ -90,7 +97,7 @@ public class ChatroomService {
     ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomId)
         .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
     chatroomValidator.checkChatroomForRead(chatroomId, memberInfoDTO);
-    if (chatroomDocument.getOwnerId().equals(memberInfoDTO.getId())) {
+    if (chatroomValidator.isOwner(chatroomDocument, memberInfoDTO)) {
       chatroomDocument.updateIsDeletedByOwner();
     } else {
       chatroomDocument.updateIsDeletedByGuest();
@@ -116,10 +123,15 @@ public class ChatroomService {
     int queueMessageCount = rabbitService.getQueueMessages(
         buildQueueName(chatroomDocument, memberInfoDTO));
 
+    // 상대방의 엔티티
+    Member opponent = memberRepository.findById(
+        chatroomValidator.isOwner(chatroomDocument, memberInfoDTO) ? chatroomDocument.getGuestId()
+            : chatroomDocument.getOwnerId()).orElseThrow(MemberNotFoundException::new);
+
     try {
       String encrypt = aes256Util.encrypt(chatroomDocument.getId());
       return ChatroomSpecResponse.of(chatroomDocument, encrypt, messageDocument, queueMessageCount,
-          memberInfoDTO);
+          opponent);
     } catch (Exception e) {
       throw new AesException(ErrorCode.ENCRYPT_ERROR);
     }
