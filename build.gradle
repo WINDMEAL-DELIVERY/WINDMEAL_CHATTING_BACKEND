@@ -25,6 +25,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    // jpa, mysql 의존성 추가
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
     // 웹소켓, STOMP, message queue 의존성
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
@@ -33,9 +37,7 @@ dependencies {
     testImplementation 'org.springframework.amqp:spring-rabbit-test'
 
     // NoSQL 의존성 : redis : jwt 저장용, mongoDB : 채팅 메세지 저장용
-
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
-//    implementation ('org.springframework.boot:spring-boot-starter-data-mongodb-reactive')
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // fcm 관련 의존성
