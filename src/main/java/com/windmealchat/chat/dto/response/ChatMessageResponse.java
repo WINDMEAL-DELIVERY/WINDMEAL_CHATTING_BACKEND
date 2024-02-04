@@ -32,6 +32,8 @@ public class ChatMessageResponse {
   @AllArgsConstructor
   @Schema(title = "채팅 메시지 세부 정보")
   public static class ChatMessageSpecResponse {
+    @Schema(description = "채팅 메시지 ID", example = "65ba11b9a1b2a0085d9b0cac")
+    private String messageId;
     @Schema(description = "채팅 메시지", example = "예정보다 조금 일찍 도착할 것 같습니다!")
     private String message;
     @Schema(description = "메시지 유형", example = "MESSAGE")
@@ -47,6 +49,7 @@ public class ChatMessageResponse {
       return ChatMessageSpecResponse.builder()
           .messageType(messageDocument.getMessageType())
           .sendTime(messageDocument.getCreatedTime())
+          .messageId(messageDocument.getMessageId())
           .senderId(messageDocument.getSenderId())
           .message(messageDocument.getMessage())
           .isFromMe(isFromMe)
