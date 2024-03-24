@@ -1,10 +1,14 @@
 package com.windmealchat.chat.service;
 
 import com.rabbitmq.client.AMQP;
+import com.windmealchat.chat.domain.ChatroomDocument;
 import com.windmealchat.chat.dto.response.ChatMessageResponse.ChatMessageSpecResponse;
+import com.windmealchat.chat.dto.response.SingleMessageResponse;
 import com.windmealchat.chat.exception.CanNotDeleteQueueException;
 import com.windmealchat.global.exception.ErrorCode;
 import java.util.HashMap;
+
+import com.windmealchat.member.dto.response.MemberInfoDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpAdmin;
@@ -16,6 +20,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class RabbitService {
+
   private final RabbitTemplate rabbitTemplate;
   private final AmqpAdmin admin;
 
@@ -26,10 +31,17 @@ public class RabbitService {
     admin.declareQueue(queue);
   }
 
-  public void sendMessage(String chatroomId, String email, ChatMessageSpecResponse messageSpecResponse) {
+  public void sendChatMessage(String chatroomId, String email,
+      ChatMessageSpecResponse messageSpecResponse) {
     rabbitTemplate.convertAndSend(
         "room." + chatroomId + "." + email.split("@")[0],
         messageSpecResponse);
+  }
+
+  public void sendChatroomInfo(Long memberId, String email,
+      SingleMessageResponse singleMessageResponse) {
+    rabbitTemplate.convertAndSend("user." + memberId + "." + email.split("@")[0],
+        singleMessageResponse);
   }
 
   public int getQueueMessages(String queueName) {
@@ -39,8 +51,12 @@ public class RabbitService {
   }
 
   public void deleteQueue(String queueName) {
-    if(!admin.deleteQueue(queueName)) {
+    if (!admin.deleteQueue(queueName)) {
       throw new CanNotDeleteQueueException(ErrorCode.INTERNAL_ERROR);
     }
+  }
+
+  public String buildQueueName(ChatroomDocument chatroomDocument, MemberInfoDTO memberInfoDTO) {
+    return "room." + chatroomDocument.getId() + "." + memberInfoDTO.getEmail().split("@")[0];
   }
 }

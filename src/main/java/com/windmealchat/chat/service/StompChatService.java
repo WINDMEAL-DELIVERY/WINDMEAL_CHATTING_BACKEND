@@ -4,6 +4,7 @@ import com.windmealchat.chat.domain.ChatroomDocument;
 import com.windmealchat.chat.domain.MessageDocument;
 import com.windmealchat.chat.dto.request.MessageDTO;
 import com.windmealchat.chat.dto.response.ChatMessageResponse.ChatMessageSpecResponse;
+import com.windmealchat.chat.dto.response.SingleMessageResponse;
 import com.windmealchat.chat.exception.ChatroomNotFoundException;
 import com.windmealchat.chat.repository.ChatroomDocumentRepository;
 import com.windmealchat.chat.repository.MessageDocumentRepository;
@@ -39,13 +40,24 @@ public class StompChatService {
         messageDTO.toDocument(chatroomId, memberInfoDTO));
 
     // 메시지를 각각 전송한다.
-    String otherEmail = memberInfoDTO.getEmail().equals(chatroomDocument.getOwnerEmail())
-        ? chatroomDocument.getGuestEmail() : chatroomDocument.getOwnerEmail();
+    boolean isOwner = memberInfoDTO.getEmail().equals(chatroomDocument.getOwnerEmail());
+    String otherEmail =
+        isOwner ? chatroomDocument.getGuestEmail() : chatroomDocument.getOwnerEmail();
+    // 채팅 웹소켓
     rabbitService.createQueue(encryptedChatroomId, otherEmail);
-    rabbitService.sendMessage(encryptedChatroomId, memberInfoDTO.getEmail(),
+    rabbitService.sendChatMessage(encryptedChatroomId, memberInfoDTO.getEmail(),
         ChatMessageSpecResponse.of(savedMessage, true));
-    rabbitService.sendMessage(encryptedChatroomId, otherEmail,
+    rabbitService.sendChatMessage(encryptedChatroomId, otherEmail,
         ChatMessageSpecResponse.of(savedMessage, false));
+
+    // 채팅방 웹소켓
+    SingleMessageResponse singleMessageResponse = new SingleMessageResponse(savedMessage);
+    rabbitService.sendChatroomInfo(memberInfoDTO.getId(), memberInfoDTO.getEmail(),
+        singleMessageResponse);
+    rabbitService.sendChatroomInfo(
+        isOwner ? chatroomDocument.getGuestId() : chatroomDocument.getOwnerId(),
+        isOwner ? chatroomDocument.getGuestEmail() : chatroomDocument.getOwnerEmail(),
+        singleMessageResponse);
   }
 
 
