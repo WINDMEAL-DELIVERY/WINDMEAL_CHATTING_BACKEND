@@ -9,6 +9,10 @@ public class MemberNotFoundException extends GeneralException {
     super(ErrorCode.NOT_FOUND, "사용자를 찾을 수 없습니다.");
   }
 
+  public MemberNotFoundException(String message) {
+    super(ErrorCode.NOT_FOUND, message);
+  }
+
   public MemberNotFoundException(ErrorCode errorCode) {
     super(errorCode, "사용자를 찾을 수 없습니다.");
   }
