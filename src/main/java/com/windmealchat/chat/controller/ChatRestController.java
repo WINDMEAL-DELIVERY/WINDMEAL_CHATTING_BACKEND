@@ -61,24 +61,24 @@ public class ChatRestController {
     return ResultDataResponseDTO.of(chatMessages);
   }
 
-//  @GetMapping("/chatroom")
-//  @Operation(summary = "채팅방의 리스트 조회 요청", description = "사용자가 속한 채팅방의 리스트를 조회합니다")
-//  @ApiResponses({
-//      @ApiResponse(responseCode = "200", description = "채팅방 리스트 조회 성공"),
-//      @ApiResponse(responseCode = "400", description = "암호화 과정에서 오류가 발생하였습니다.",
-//          content = @Content(schema = @Schema(implementation = ExceptionResponseDTO.class))),
-//      @ApiResponse(responseCode = "401", description = "요청에 인증 정보가 존재하지 않습니다.",
-//          content = @Content(schema = @Schema(implementation = ExceptionResponseDTO.class))),
-//      @ApiResponse(responseCode = "401", description = "유효하지 않은 엑세스 토큰입니다.",
-//          content = @Content(schema = @Schema(implementation = ExceptionResponseDTO.class))),
-//  })
-//  public ResultDataResponseDTO<ChatroomResponse> chatroomList(
-//      Pageable pageable,
-//      HttpServletRequest request) {
-//    MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
-//    ChatroomResponse chatrooms = chatroomService.getChatrooms(memberInfoDTO, pageable);
-//    return ResultDataResponseDTO.of(chatrooms);
-//  }
+  @GetMapping("/chatroom")
+  @Operation(summary = "채팅방의 리스트 조회 요청", description = "사용자가 속한 채팅방의 리스트를 조회합니다")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "채팅방 리스트 조회 성공"),
+      @ApiResponse(responseCode = "400", description = "암호화 과정에서 오류가 발생하였습니다.",
+          content = @Content(schema = @Schema(implementation = ExceptionResponseDTO.class))),
+      @ApiResponse(responseCode = "401", description = "요청에 인증 정보가 존재하지 않습니다.",
+          content = @Content(schema = @Schema(implementation = ExceptionResponseDTO.class))),
+      @ApiResponse(responseCode = "401", description = "유효하지 않은 엑세스 토큰입니다.",
+          content = @Content(schema = @Schema(implementation = ExceptionResponseDTO.class))),
+  })
+  public ResultDataResponseDTO<ChatroomResponse> chatroomList(
+      Pageable pageable,
+      HttpServletRequest request) {
+    MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
+    ChatroomResponse chatrooms = chatroomService.getChatrooms(memberInfoDTO, pageable);
+    return ResultDataResponseDTO.of(chatrooms);
+  }
 
   // TODO delete?
   @PostMapping("/chatroom")
