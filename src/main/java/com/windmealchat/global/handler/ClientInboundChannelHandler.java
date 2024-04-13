@@ -126,9 +126,9 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
     }
 
     String authorizationHeader = accessor.getNativeHeader(AUTHORIZATION_HEADER).get(0);
-    String decrypt = aes256Util.decrypt(authorizationHeader)
-        .orElseThrow(() -> new MessageDeliveryException(INVALID_STOMP_AUTHORIZATION_HEADER));
-
+//    String decrypt = aes256Util.doubleDecrypt(authorizationHeader)
+//        .orElseThrow(() -> new MessageDeliveryException(INVALID_STOMP_AUTHORIZATION_HEADER));
+    String decrypt = aes256Util.doubleDecrypt(authorizationHeader);
     if (!decrypt.equals(accessToken)) {
       throw new MessageDeliveryException(NOT_MATCHING_TOKEN);
     }
