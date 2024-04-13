@@ -49,9 +49,9 @@ public class TokenService {
   public MemberInfoDTO resolveJwtTokenFromHeader(Optional<String> tokenOptional) throws GeneralException{
     String token = tokenOptional.orElseThrow(
         () -> new TokenNotExistsException(ErrorCode.UNAUTHORIZED));
-    Optional<String> decryptedTokenOptional = aes256Util.decrypt(token);
-    String decryptedToken = decryptedTokenOptional.orElseThrow(
-        () -> new TokenEncryptionException(ErrorCode.ENCRYPT_ERROR));
+    String decryptedToken = aes256Util.doubleDecrypt(token);
+//    String decryptedToken = decryptedTokenOptional.orElseThrow(
+//        () -> new TokenEncryptionException(ErrorCode.ENCRYPT_ERROR));
     try {
       return tokenProvider.getMemberInfoFromToken(decryptedToken)
           .orElseThrow(() -> new InvalidAccessTokenException(ErrorCode.UNAUTHORIZED));
