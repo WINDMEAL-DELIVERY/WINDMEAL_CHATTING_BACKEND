@@ -81,7 +81,7 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
     StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
     if (StompCommand.SEND.equals(accessor.getCommand())) {
       Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
-      String alarmToken = (String) sessionAttributes.get(ALARM_TOKEN);
+//      String alarmToken = (String) sessionAttributes.get(ALARM_TOKEN);
       String accessToken = (String) sessionAttributes.get(TOKEN);
       String serializedMessageDTO = new String((byte[]) message.getPayload(),
           StandardCharsets.UTF_8);
@@ -90,7 +90,7 @@ public class ClientInboundChannelHandler implements ChannelInterceptor {
         MessageDTO messageDTO = objectMapper.readValue(serializedMessageDTO, MessageDTO.class);
         MemberInfoDTO memberInfoFromToken = tokenProvider.getMemberInfoFromToken(
             accessToken).get();
-        sendNotification(messageDTO, alarmToken, memberInfoFromToken.getNickname());
+        sendNotification(messageDTO, messageDTO.getOpponentAlarmToken(), memberInfoFromToken.getNickname());
       } catch (JsonProcessingException e) {
         throw new MessageDeliveryException(DESERIALIZATION_EXCEPTION);
       } catch (NoSuchElementException e) {

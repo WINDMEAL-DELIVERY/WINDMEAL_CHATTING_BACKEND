@@ -36,7 +36,7 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
       ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) request;
       HttpServletRequest servletRequest = servletServerHttpRequest.getServletRequest();
         String token = resolveToken(servletRequest, CODE);
-      String alarmToken = resolveToken(servletRequest, CODE_A);
+//      String alarmToken = resolveToken(servletRequest, CODE_A);
       Optional<MemberInfoDTO> memberInfoDTO = resolveMemberInfo(token);
       if (memberInfoDTO.isPresent()) {
         String key =
@@ -44,7 +44,7 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
         Optional<String> refreshToken = refreshTokenDAO.getRefreshToken(aes256Util.encrypt(key));
         if (refreshToken.isPresent()) {
           attributes.put(TOKEN, token);
-          attributes.put(ALARM_TOKEN, alarmToken);
+//          attributes.put(ALARM_TOKEN, alarmToken);
           return true;
         }
       }

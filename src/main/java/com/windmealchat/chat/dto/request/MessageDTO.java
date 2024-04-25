@@ -19,6 +19,7 @@ public class MessageDTO {
     private String chatRoomId;
     private MessageType type;
     private String message;
+    private String opponentAlarmToken;
 
     public MessageDocument toDocument(String decryptedId, MemberInfoDTO memberInfoDTO) {
         return new MessageDocument(decryptedId,this, memberInfoDTO);
