@@ -23,12 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -40,7 +35,7 @@ public class ChatRestController {
   private final ChatroomService chatroomService;
   private final TokenService tokenService;
 
-  @GetMapping("/{chatroomId}")
+  @GetMapping
   @Operation(summary = "채팅방의 메시지 리스트 조회 요청", description = "특정 채팅방의 메시지 리스트를 조회합니다.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "메시지 리스트 조회 성공"),
@@ -53,7 +48,7 @@ public class ChatRestController {
       @ApiResponse(responseCode = "404", description = "채팅방을 찾을 수 없습니다.",
           content = @Content(schema = @Schema(implementation = ExceptionResponseDTO.class))),
   })
-  public ResultDataResponseDTO<ChatMessageResponse> messageList(@PathVariable String chatroomId,
+  public ResultDataResponseDTO<ChatMessageResponse> messageList(@RequestParam String chatroomId,
       Pageable pageable, HttpServletRequest request) {
     MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
     ChatMessageResponse chatMessages = chatroomService.getChatMessages(memberInfoDTO, pageable,
