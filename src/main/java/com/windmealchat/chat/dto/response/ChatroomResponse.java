@@ -62,7 +62,7 @@ public class ChatroomResponse {
       this.opponentProfileImage = opponent.getProfileImage();
     }
 
-    public static ChatroomSpecResponse of(ChatroomDocument chatroomDocument, String encrypt,
+    public static ChatroomSpecResponse of(ChatroomDocument chatroomDocument,
         MessageDocument messageDocument, int uncheckedMessageCount, Member opponent) {
 
       String lastMessage = messageDocument != null ? messageDocument.getMessage() : "";
@@ -73,7 +73,7 @@ public class ChatroomResponse {
       MessageType lastMessageType =
           messageDocument != null ? messageDocument.getMessageType() : MessageType.SYSTEM;
 
-      return new ChatroomSpecResponse(encrypt, chatroomDocument.getOrderId(), lastMessage,
+      return new ChatroomSpecResponse(chatroomDocument.getId(), chatroomDocument.getOrderId(), lastMessage,
           lastMessageType, lastMessageTime, uncheckedMessageCount, opponent);
     }
 

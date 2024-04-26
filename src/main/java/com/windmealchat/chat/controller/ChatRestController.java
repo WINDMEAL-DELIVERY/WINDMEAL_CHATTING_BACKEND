@@ -35,7 +35,7 @@ public class ChatRestController {
   private final ChatroomService chatroomService;
   private final TokenService tokenService;
 
-  @GetMapping
+  @GetMapping("/{chatroomId}")
   @Operation(summary = "채팅방의 메시지 리스트 조회 요청", description = "특정 채팅방의 메시지 리스트를 조회합니다.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "메시지 리스트 조회 성공"),
@@ -48,7 +48,7 @@ public class ChatRestController {
       @ApiResponse(responseCode = "404", description = "채팅방을 찾을 수 없습니다.",
           content = @Content(schema = @Schema(implementation = ExceptionResponseDTO.class))),
   })
-  public ResultDataResponseDTO<ChatMessageResponse> messageList(@RequestParam String chatroomId,
+  public ResultDataResponseDTO<ChatMessageResponse> messageList(@PathVariable String chatroomId,
       Pageable pageable, HttpServletRequest request) {
     MemberInfoDTO memberInfoDTO = tokenService.resolveJwtTokenFromHeader(resolveToken(request));
     ChatMessageResponse chatMessages = chatroomService.getChatMessages(memberInfoDTO, pageable,
