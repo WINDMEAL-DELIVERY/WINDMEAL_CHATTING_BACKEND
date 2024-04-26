@@ -66,13 +66,13 @@ public class ChatroomService {
    *
    * @param memberInfoDTO
    * @param pageable
-   * @param encryptedChatroomId
+   * @param chatroomId
    * @return
    */
   public ChatMessageResponse getChatMessages(MemberInfoDTO memberInfoDTO, Pageable pageable,
-      String encryptedChatroomId) {
-    String chatroomId = aes256Util.decrypt(encryptedChatroomId)
-        .orElseThrow(() -> new AesException(ErrorCode.ENCRYPT_ERROR));
+      String chatroomId) {
+//    String chatroomId = aes256Util.decrypt(encryptedChatroomId)
+//        .orElseThrow(() -> new AesException(ErrorCode.ENCRYPT_ERROR));
     ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomId)
         .orElseThrow(() -> new ChatroomNotFoundException(
             ErrorCode.NOT_FOUND));
@@ -92,11 +92,11 @@ public class ChatroomService {
    */
   public void leaveChatroom(MemberInfoDTO memberInfoDTO,
       ChatroomLeaveRequest chatroomLeaveRequest) {
-    String chatroomId = aes256Util.decrypt(chatroomLeaveRequest.getChatroomId())
-        .orElseThrow(() -> new AesException(ErrorCode.ENCRYPT_ERROR));
-    ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomId)
+//    String chatroomId = aes256Util.decrypt(chatroomLeaveRequest.getChatroomId())
+//        .orElseThrow(() -> new AesException(ErrorCode.ENCRYPT_ERROR));
+    ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomLeaveRequest.getChatroomId())
         .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
-    chatroomValidator.checkChatroomForRead(chatroomId, memberInfoDTO);
+    chatroomValidator.checkChatroomForRead(chatroomLeaveRequest.getChatroomId(), memberInfoDTO);
     if (chatroomValidator.isOwner(chatroomDocument, memberInfoDTO)) {
       chatroomDocument.updateIsDeletedByOwner();
     } else {
@@ -128,13 +128,14 @@ public class ChatroomService {
         chatroomValidator.isOwner(chatroomDocument, memberInfoDTO) ? chatroomDocument.getGuestId()
             : chatroomDocument.getOwnerId()).orElseThrow(MemberNotFoundException::new);
 
-    try {
-      String encrypt = aes256Util.encrypt(chatroomDocument.getId());
-      return ChatroomSpecResponse.of(chatroomDocument, encrypt, messageDocument, queueMessageCount,
-          opponent);
-    } catch (Exception e) {
-      throw new AesException(ErrorCode.ENCRYPT_ERROR);
-    }
+    return ChatroomSpecResponse.of(chatroomDocument, messageDocument, queueMessageCount, opponent);
+//    try {
+//      String encrypt = aes256Util.encrypt(chatroomDocument.getId());
+//      return ChatroomSpecResponse.of(chatroomDocument, encrypt, messageDocument, queueMessageCount,
+//          opponent);
+//    } catch (Exception e) {
+//      throw new AesException(ErrorCode.ENCRYPT_ERROR);
+//    }
   }
 
 
