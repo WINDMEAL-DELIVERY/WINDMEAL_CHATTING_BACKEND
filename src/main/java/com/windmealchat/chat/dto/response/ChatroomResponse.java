@@ -41,6 +41,8 @@ public class ChatroomResponse {
     private final LocalDateTime lastMessageTime;
     @Schema(description = "상대방의 닉네임", example = "뚜벅이")
     private final String opponentNickname;
+    @Schema(description = "상대방의 아이디", example = "2")
+    private final Long opponentId;
     @Schema(description = "읽지 않은 메시지 수", example = "3")
     private final int uncheckedMessageCount;
     @Schema(description = "상대방의 알람 토큰(암호화 적용)", example = "p+Zvgw7s3QKfd0L5KRWcAr8lj+ojc8FCkgqz8puYgakB5p6CrfbY/okmXYimvekkDvFazLwNQCy8LVkKgR91bt0smoBNk24rJ9FTDqk7pBM//7+P2t1vrZ757oEkk/4DhbgHQ3uEUFCcoT5zgNzWk0JZFIrqtNU8ufqOUmmVirPquQo1nY7lEMGOMPNn2S0hnJeACWOWw8fVU/qFWiiglizxBE/J2B1WqAIVwU1i7/c=")
@@ -55,6 +57,7 @@ public class ChatroomResponse {
       this.chatroomId = chatroomId;
       this.lastMessage = lastMessage;
       this.messageType = messageType;
+      this.opponentId = opponent.getId();
       this.lastMessageTime = lastMessageTime;
       this.opponentAlarmToken = opponent.getToken();
       this.opponentNickname = opponent.getNickname();
