@@ -28,10 +28,10 @@ public class StompChatService {
   private final RabbitService rabbitService;
   private final AES256Util aes256Util;
 
-  public void sendMessage(String encryptedChatroomId, MessageDTO messageDTO,
+  public void sendMessage(String chatroomId, MessageDTO messageDTO,
       MemberInfoDTO memberInfoDTO) {
-    String chatroomId = aes256Util.decrypt(encryptedChatroomId)
-        .orElseThrow(() -> new AesException(ErrorCode.ENCRYPT_ERROR));
+//    String chatroomId = aes256Util.decrypt(encryptedChatroomId)
+//        .orElseThrow(() -> new AesException(ErrorCode.ENCRYPT_ERROR));
     // TODO 여기 있는 모든 예외 메시지들 모두 MessageDeliveryException으로 바꿔보기
     ChatroomDocument chatroomDocument = chatroomDocumentRepository.findById(chatroomId)
         .orElseThrow(() -> new ChatroomNotFoundException(ErrorCode.NOT_FOUND));
@@ -44,10 +44,10 @@ public class StompChatService {
     String otherEmail =
         isOwner ? chatroomDocument.getGuestEmail() : chatroomDocument.getOwnerEmail();
     // 채팅 웹소켓
-    rabbitService.createQueue(encryptedChatroomId, otherEmail);
-    rabbitService.sendChatMessage(encryptedChatroomId, memberInfoDTO.getEmail(),
+    rabbitService.createQueue(chatroomId, otherEmail);
+    rabbitService.sendChatMessage(chatroomId, memberInfoDTO.getEmail(),
         ChatMessageSpecResponse.of(savedMessage, true));
-    rabbitService.sendChatMessage(encryptedChatroomId, otherEmail,
+    rabbitService.sendChatMessage(chatroomId, otherEmail,
         ChatMessageSpecResponse.of(savedMessage, false));
 
     // 채팅방 웹소켓

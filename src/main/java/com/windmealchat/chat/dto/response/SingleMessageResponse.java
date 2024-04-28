@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import lombok.Getter;
 
 @Getter
+@Schema(title = "채팅방 실시간 웹소켓 데이터")
 public class SingleMessageResponse {
   @Schema(description = "채팅방 ID", example = "65ba11b9a1b2a0085d9b0cac")
   private String chatroomId;
